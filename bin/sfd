@@ -1,15 +1,23 @@
 #!/usr/bin/env ruby
-#
-require 'salesforcedeploytool'
+require 'yaml'
 
-CONFIG_FILE = '/etc/salesforce.yaml'
+CONFIG_FILE = ['/etc/salesforce.yaml','~/.salesforce.yaml']
 
-if File.exists? CONFIG_FILE
-  config = YAML::load File.open(CONFIG_FILE).read
-else 
-  puts "error: /etc/salesforce.yaml not found"
+config = nil
+CONFIG_FILE.each do |cf|
+  cf = File.expand_path cf
+  if File.exists? cf
+    config = YAML::load File.open(cf).read 
+    break
+  end
+end
+
+if config.nil? 
+  puts "error: /etc/salesforce.yaml or ~/.salesforce.yaml not found"
   exit 1
 end
+
+require 'salesforcedeploytool'
 
 program :version, SalesforceDeployTool::VERSION
 program :description, 'A cli tool to help manage and deploy salesforce environments with git'

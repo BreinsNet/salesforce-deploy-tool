@@ -5,5 +5,5 @@ gemspec
 
 gem 'git'
 gem 'colorize'
-gem 'dcgen'
 gem 'commander'
+gem 'salesforce-dcgen'

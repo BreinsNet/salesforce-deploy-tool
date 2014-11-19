@@ -13,6 +13,8 @@ module SalesforceDeployTool
 
       @server_url = @env == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com'
 
+      self.clone if ! Dir.exists? File.join(@git_dir,'.git')
+
     end
 
     def clone

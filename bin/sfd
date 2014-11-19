@@ -1,237 +1,124 @@
 #!/usr/bin/env ruby
+#
+require 'salesforcedeploytool'
 
-require 'rubygems'
-require 'commander/import'
-require 'git'
-require 'pp'
-require 'colorize'
-require 'logger'
-require 'open3'
-require_relative '/vagrant/sf/lib/functions.rb'
+CONFIG_FILE = '/etc/salesforce.yaml'
 
-# Load Configuration files
-Dir['/vagrant/config/*rb'].each do |config|
-  require_relative config
+if File.exists? CONFIG_FILE
+  config = YAML::load File.open(CONFIG_FILE).read
+else 
+  puts "error: /etc/salesforce.yaml not found"
+  exit 1
 end
 
-program :version, '0.0.1'
-program :description, 'A cli tool to help manage salesforce environments'
+program :version, SalesforceDeployTool::VERSION
+program :description, 'A cli tool to help manage and deploy salesforce environments with git'
 
-sandbox_config_path = File.expand_path('~/.sf')
-temporary_sf_dir = "/tmp/.sf-tmp"
-FileUtils.mkdir_p File.dirname $log_file if ! File.exists? File.dirname $log_file
-FileUtils.touch $log_file if not File.exists? $log_file
-logger = Logger.new File.open($log_file,'a')
-
-begin
-  sandbox = File.open(File.expand_path(sandbox_config_path)).read
-rescue
-  sandbox = nil
-end
- 
 command :init do |c|
   c.syntax = 'sf init [options]'
-  c.summary = 'Initialize salesforce environment'
-  c.description = "Clone the #{$git_repo} to #{$git_dir}"
+  c.summary = 'Initialize salesforce environment from git'
+  c.description = "Clone the #{config[:git_repo]} to #{config[:git_dir]}"
   c.example 'usage', 'sf init'
   c.action do |args, options|
+  
+    # Initialize
+    sfdt = SalesforceDeployTool::App.new config
 
-    if Dir.exists? File.join($git_dir,'.git')
-      puts "INFO: Project has already been initialized"
-      exit 0
-    end
+    # Clone
+    sfdt.clone
 
-    begin
-      Git.clone($git_repo, File.basename($git_dir), :path => File.dirname($git_dir))
-    rescue => e
-      STDERR.puts "ERROR: A problem occured when cloning #{$git_repo}, error was\n\n"
-      puts e
-      exit 1
-    end
-
-    puts "INFO: Project successfully created "
- 
   end
 end
 
 command :pull do |c|
   c.syntax = 'sf pull'
   c.summary = 'Pull code from the environment'
-  c.description = "Pull code from environment and update #{$git_dir}"
+  c.description = "Pull code from environment and update #{config[:git_dir]}"
   c.example 'usage:', 'sf pull'
   c.example 'usage:', 'sf pull -c -d'
-  c.option "--clean", "Clean all existing files from #{$git_dir}"
+  c.option "--no-clean", "Do not clean the currrent source code before pulling"
   c.option "--debug", "Verbose output"
+  c.option "--env NAME", "use 'prod' to deploy production or sandbox name"
   c.action do |args, options|
 
-    if sandbox.nil?
-      puts "error: Please select environment first with 'sf sandbox SANDBOX_NAME'"
+    # Parameter validation:
+    if options.env.nil? 
+      puts "error: please specify the environment to pull from using --env"
       exit 1
     end
+    config[:env] = options.env
+    config[:debug] = options.debug.nil? ? false : true
 
-    if not File.exists? File.join($git_dir,'.git')
-      puts "error: Project not initialized, please run sf init firsg"
-      exit 1
-    end
+    # Initialize
+    sfdt = SalesforceDeployTool::App.new config
 
-    if options.clean
-      print "INFO: Cleaning existing files"
-      Dir[File.join($git_dir,'src','*')].each do |dir|
-        FileUtils.rm_rf dir unless dir =~ /.*package.xml$/
-      end
-      puts " OK"
-    end
+    # Clean all files from repo
+    sfdt.clean_git_dir unless options.no_clean
 
-    env = ""
-    env += " SF_USERNAME=" + $sf_username + "." + sandbox
-    env += " SF_PASSWORD=" + $sf_password
-    env += " SF_SERVERURL=" + $sf_serverurl
-    cmd = " ant retrieveCode"
-
-    full_cmd = env + cmd
-
-    Dir.chdir $git_dir
-
-    exec_options = {
-      :stderr => options.debug,
-      :stdout => options.debug,
-      :spinner => ! options.debug,
-      :message => "INFO: Retrieving code from #{sandbox}  ",
-      :okmsg => "OK",
-      :failmsg => "FAILED",
-      :logger => logger
-    }
-    
-    if options.debug
-      exec_options[:message] += "\n\n"
-      exec_options[:okmsg] = nil
-      exec_options[:failmsg] = nil
-    end
-
-    exit_code = myexec full_cmd, exec_options
-
-    exit exit_code
+    # Pull the changes
+    sfdt.pull "INFO: Pulling changes from #{config[:env]}"
 
   end
 
 end
+
 
 command :push do |c|
   c.syntax = 'sf push [options]'
   c.summary = 'Push code into a sandbox'
   c.description = ''
-  c.example 'description', "Push the code that is located into #{$git_dir} into the active sandbox"
+  c.example 'description', "Push the code that is located into #{config[:git_dir]} into the active sandbox"
+  c.option "--env NAME", "use 'prod' to deploy production or sandbox name"
   c.option "--debug", "Verbose output"
   c.option "--test", "Deploy and test"
-  c.option "--exclude LIST", "a CSV list of metadata to exclude"
+  c.option "--exclude LIST", "a CSV list of metadata to exclude when creating destructiveChange.xml"
   c.option "--append", "Disable destructive change and do an append deploy"
   c.action do |args, options|
 
-    if sandbox.nil?
-      puts "error: Please select environment first with 'sf sandbox SANDBOX_NAME'"
+    # Parameter validation:
+    if options.env.nil? 
+      puts "error: please specify the environment to pull from using --env"
       exit 1
     end
+    config[:env] = options.env
+    config[:debug] = options.debug.nil? ? false : true
+    config[:test] = options.test.nil? ? false : true
 
-    # Set env variables to run ant
-    env = ""
-    env += " SF_USERNAME=" + $sf_username + "." + sandbox
-    env += " SF_PASSWORD=" + $sf_password
-    env += " SF_SERVERURL=" + $sf_serverurl
+    # Initialize
+    sfdt = SalesforceDeployTool::App.new config
 
-    # myexec options
-    exec_options = {
-      :stderr   =>  options.debug,
-      :stdout   =>  options.debug,
-      :spinner  =>  !               options.debug,
-      :okmsg    =>  "OK",
-      :failmsg  =>  "FAILED",
-      :logger   =>  logger
-    }
+    # Pull changes from sandbox to temporary directory:
+    config_tmp = config.clone
+    config_tmp[:git_dir] = config_tmp[:tmp_dir]
+    FileUtils.rm_rf config_tmp[:git_dir] if File.exists? config_tmp[:git_dir]
+    sfdt_tmp = SalesforceDeployTool::App.new config_tmp
+    sfdt_tmp.clone
+    sfdt_tmp.clean_git_dir
+    sfdt_tmp.pull "INFO: Pulling changes from #{config[:env]} to temporary directory #{config[:tmp_dir]} to generate destructiveChanges.xml  "
 
-    if options.debug
-      exec_options[:okmsg]    =   nil
-      exec_options[:failmsg]  =   nil
-    end
-
-    # Remove destructive change xml file if any
-    FileUtils.rm File.join($git_dir,'src','destructiveChanges.xml') if File.exists? File.join($git_dir,'src','destructiveChanges.xml')
-
-    # Deploy code
-    exec_options[:message] = options.test ?  "INFO: Deploying and Testing code to #{sandbox}:  " : "INFO: Deploying code to #{sandbox}:  "
-    exec_options[:message]  +=  "\n\n" if options.debug
-
-    cmd = options.test ? " ant deployAndTestCode" : " ant deployCode"
-    full_cmd = env + cmd
-
-    Dir.chdir $git_dir
-    myexec full_cmd,exec_options
-
-    # Block to generate destructiveChanges.xml
+    # Create destructiveChanges.xml
     if ! options.append
+      puts "INFO: Creating destructive changes xml"
+      dc_gen = Dcgen::App.new
+      dc_gen.master = File.join(config[:git_dir],'src')
+      dc_gen.destination = File.join(config[:tmp_dir],'src')
+      dc_gen.output = File.join(config[:git_dir],'src','destructiveChanges.xml')
+      dc_gen.exclude = options.exclude.split(',') unless options.exclude.nil?
 
-      puts "INFO: Now will generate destructiveChange.xml and redeploy"
-
-      # Retrieve code from environment on temprary location
-      exec_options[:message] = "INFO: Retrieving code #{temporary_sf_dir} from #{sandbox}  "
-      exec_options[:message]  +=  "\n\n" if options.debug
-
-      FileUtils.rm_rf temporary_sf_dir
-      Git.clone($git_repo, temporary_sf_dir)
-      Dir[File.join(temporary_sf_dir,'src/*')].each do |dir|
-        FileUtils.rm_rf dir unless dir =~ /.*package.xml$/
-      end
-      Dir.chdir temporary_sf_dir
-
-      cmd = " ant retrieveCode"
-      full_cmd = env + cmd
-
-      myexec full_cmd, exec_options
-
-      # Generate destructiveChange.xml
-      exec_options[:message] = "INFO: Generating #{$git_dir}/src/destructiveChanges.xml  "
-      exec_options[:message]  +=  "\n\n" if options.debug
-
-      args = options.exclude ? " -x #{options.exclude}" : ""
-      cmd = "dcgen -m #{$git_dir}/src -d #{temporary_sf_dir}/src -o #{$git_dir}/src/destructiveChanges.xml #{args}"
-      myexec cmd,exec_options
-
-      # Deploy code
-      exec_options[:message] = options.test ?  "INFO: Destructively deploying and Testing code to #{sandbox}:  " : "INFO: Destructively deploying code to #{sandbox}:  "
-      exec_options[:message]  +=  "\n\n" if options.debug
-
-      cmd = options.test ? " ant deployAndTestCode" : " ant deployCode"
-      full_cmd = env + cmd
-
-      Dir.chdir $git_dir
-      myexec full_cmd,exec_options
-
+      # Capture stdout when running generate_destructive_Changes, TODO: fix dcgen
+      stringio = StringIO.new
+      stdout_tmp = $stdout
+      $stdout = stringio unless options.debug
+      dc_gen.generate_destructive_changes
+      $stdout = stdout_tmp
     end
 
-  end
-end
+    # Finally push:
+    sfdt.push
 
-command :sandbox do |c|
-  c.syntax = 'sf sandbox SANDBOX_NAME'
-  c.summary = 'Set sandbox to work on'
-  c.description = 'Set the sandbox to work with pull and push. If no parameter defined, it will print the current sandbox selected.'
-  c.example 'description', 'Select sandbox'
-  c.action do |args, options|
-    if args.size > 1
-      puts "error: Wrong number of arguments"
-    end
-
-    if args.size == 0
-      if ! sandbox.nil?
-         puts "sandbox: " + sandbox
-         exit 0
-      else
-        puts "WARN: Sandbox has not been set yet"
-      end
-    end
-
-    File.open(sandbox_config_path,'w').write args.first
-      
   end
 end
 
 default_command :help
+
+

@@ -64,7 +64,7 @@ command :pull do |c|
     sfdt.clean_git_dir unless options.no_clean
 
     # Pull the changes
-    sfdt.pull "INFO: Pulling changes from #{config[:env]}"
+    sfdt.pull "INFO: Pulling changes from #{config[:env]}  "
 
   end
 

@@ -57,7 +57,7 @@ command :pull do |c|
   c.action do |args, options|
 
     # Parameter validation:
-    if options.env.nil? or sandbox.nil?
+    if options.env.nil? and sandbox.nil?
       puts "error: please specify the environment to pull from using --env"
       exit 1
     end
@@ -91,7 +91,7 @@ command :push do |c|
   c.action do |args, options|
 
     # Parameter validation:
-    if options.env.nil? or sandbox.nil?
+    if options.env.nil? and sandbox.nil?
       puts "error: please specify the environment to pull from using --env"
       exit 1
     end

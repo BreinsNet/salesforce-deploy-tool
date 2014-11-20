@@ -2,6 +2,7 @@
 require 'yaml'
 
 CONFIG_FILE = ['/etc/salesforce.yaml','~/.salesforce.yaml']
+SANDBOX_CONFIG_FILE = '~/.salesforce.sbox'
 
 config = nil
 CONFIG_FILE.each do |cf|
@@ -15,6 +16,12 @@ end
 if config.nil? 
   puts "error: /etc/salesforce.yaml or ~/.salesforce.yaml not found"
   exit 1
+end
+
+begin
+  sandbox = File.open(File.expand_path(SANDBOX_CONFIG_FILE)).read
+rescue
+  sandbox = nil
 end
 
 require 'salesforcedeploytool'
@@ -50,11 +57,11 @@ command :pull do |c|
   c.action do |args, options|
 
     # Parameter validation:
-    if options.env.nil? 
+    if options.env.nil? or sandbox.nil?
       puts "error: please specify the environment to pull from using --env"
       exit 1
     end
-    config[:env] = options.env
+    config[:env] = options.env || sandbox
     config[:debug] = options.debug.nil? ? false : true
 
     # Initialize
@@ -84,11 +91,11 @@ command :push do |c|
   c.action do |args, options|
 
     # Parameter validation:
-    if options.env.nil? 
+    if options.env.nil? or sandbox.nil?
       puts "error: please specify the environment to pull from using --env"
       exit 1
     end
-    config[:env] = options.env
+    config[:env] = options.env || sandbox
     config[:debug] = options.debug.nil? ? false : true
     config[:test] = options.test.nil? ? false : true
 
@@ -123,6 +130,30 @@ command :push do |c|
 
     # Finally push:
     sfdt.push
+
+  end
+end
+
+command :sandbox do |c|
+  c.syntax = 'sf sandbox SANDBOX_NAME'
+  c.summary = 'Set sandbox to work on, this will override --env '
+  c.description = 'Set the sandbox to work with pull and push. If no parameter defined, it will print the current sandbox selected.'
+  c.action do |args, options|
+
+    if args.size > 1
+      puts "error: Wrong number of arguments"
+    end
+
+    if args.size == 0
+      if ! sandbox.nil?
+         puts "sandbox: " + sandbox
+         exit 0
+      else
+        puts "WARN: Sandbox has not been set yet"
+        exit 1
+      end
+    end
+    File.open(File.expand_path(SANDBOX_CONFIG_FILE),'w').write args.first
 
   end
 end

@@ -102,17 +102,17 @@ command :push do |c|
     # Initialize
     sfdt = SalesforceDeployTool::App.new config
 
-    # Pull changes from sandbox to temporary directory:
-    config_tmp = config.clone
-    config_tmp[:git_dir] = config_tmp[:tmp_dir]
-    FileUtils.rm_rf config_tmp[:git_dir] if File.exists? config_tmp[:git_dir]
-    sfdt_tmp = SalesforceDeployTool::App.new config_tmp
-    sfdt_tmp.clone
-    sfdt_tmp.clean_git_dir
-    sfdt_tmp.pull "INFO: Pulling changes from #{config[:env]} to temporary directory #{config[:tmp_dir]} to generate destructiveChanges.xml  "
-
-    # Create destructiveChanges.xml
     if ! options.append
+      # Pull changes from sandbox to temporary directory:
+      config_tmp = config.clone
+      config_tmp[:git_dir] = config_tmp[:tmp_dir]
+      FileUtils.rm_rf config_tmp[:git_dir] if File.exists? config_tmp[:git_dir]
+      sfdt_tmp = SalesforceDeployTool::App.new config_tmp
+      sfdt_tmp.clone
+      sfdt_tmp.clean_git_dir
+      sfdt_tmp.pull "INFO: Pulling changes from #{config[:env]} to temporary directory #{config[:tmp_dir]} to generate destructiveChanges.xml  "
+
+      # Create destructiveChanges.xml
       puts "INFO: Creating destructive changes xml"
       dc_gen = Dcgen::App.new
       dc_gen.master = File.join(config[:git_dir],'src')

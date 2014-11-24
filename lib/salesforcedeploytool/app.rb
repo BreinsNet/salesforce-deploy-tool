@@ -6,13 +6,13 @@ module SalesforceDeployTool
 
       @git_repo = config[:git_repo]
       @git_dir = config[:git_dir]
-      @env = config[:env]
-      @username = @env == 'prod' ? config[:username] : config[:username] + '.' + @env 
+      @sandbox = config[:sandbox]
+      @username = @sandbox == 'prod' ? config[:username] : config[:username] + '.' + @sandbox 
       @password = config[:password]
       @debug = config[:debug]
       @test = config[:test]
 
-      @server_url = @env == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com'
+      @server_url = @sandbox == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com'
 
       self.clone if ! Dir.exists? File.join(@git_dir,'.git')
 
@@ -100,7 +100,7 @@ module SalesforceDeployTool
       end
 
       # Deploy code
-      exec_options[:message] = @test ?  "INFO: Deploying and Testing code to #{@env}:  " : "INFO: Deploying code to #{@env}:  "
+      exec_options[:message] = @test ?  "INFO: Deploying and Testing code to #{@sandbox}:  " : "INFO: Deploying code to #{@sandbox}:  "
       exec_options[:message]  +=  "\n\n" if @debug
 
       cmd = @test ? " ant deployAndTestCode" : " ant deployCode"

@@ -27,11 +27,11 @@ end
 require 'salesforcedeploytool'
 
 program :version, SalesforceDeployTool::VERSION
-program :description, 'A cli tool to help manage and deploy salesforce environments with git'
+program :description, 'A cli tool to help manage and deploy salesforce sandboxes with git'
 
 command :init do |c|
   c.syntax = 'sf init [options]'
-  c.summary = 'Initialize salesforce environment from git'
+  c.summary = 'Initialize salesforce sandbox from git'
   c.description = "Clone the #{config[:git_repo]} to #{config[:git_dir]}"
   c.example 'usage', 'sf init'
   c.action do |args, options|
@@ -47,21 +47,24 @@ end
 
 command :pull do |c|
   c.syntax = 'sf pull'
-  c.summary = 'Pull code from the environment'
-  c.description = "Pull code from environment and update #{config[:git_dir]}"
+  c.summary = 'Pull code from the sandbox'
+  c.description = "Pull code from sandbox and update #{config[:git_dir]}"
   c.example 'usage:', 'sf pull'
   c.example 'usage:', 'sf pull -c -d'
-  c.option "--no-clean", "Do not clean the currrent source code before pulling"
+  c.option "--no-clean", "-c", "Do not clean the currrent source code before pulling"
   c.option "--debug", "Verbose output"
-  c.option "--env NAME", "use 'prod' to deploy production or sandbox name"
+  c.option "--sandbox NAME", "-s NAME", "use 'prod' to deploy production or sandbox name"
   c.action do |args, options|
 
+    options.no_clean = true unless options.c
+    options.sandbox = options.s if options.s
+
     # Parameter validation:
-    if options.env.nil? and sandbox.nil?
-      puts "error: please specify the environment to pull from using --env"
+    if options.sandbox.nil? and sandbox.nil?
+      puts "error: please specify the sandbox to pull from using --sandbox"
       exit 1
     end
-    config[:env] = options.env || sandbox
+    config[:sandbox] = options.sandbox || sandbox
     config[:debug] = options.debug.nil? ? false : true
 
     # Initialize
@@ -71,31 +74,35 @@ command :pull do |c|
     sfdt.clean_git_dir unless options.no_clean
 
     # Pull the changes
-    sfdt.pull "INFO: Pulling changes from #{config[:env]}  "
+    sfdt.pull "INFO: Pulling changes from #{config[:sandbox]}  "
 
   end
 
 end
-
 
 command :push do |c|
   c.syntax = 'sf push [options]'
   c.summary = 'Push code into a sandbox'
   c.description = ''
   c.example 'description', "Push the code that is located into #{config[:git_dir]} into the active sandbox"
-  c.option "--env NAME", "use 'prod' to deploy production or sandbox name"
+  c.option "--sandbox NAME", "-s NAME", "use 'prod' to deploy production or sandbox name"
   c.option "--debug", "Verbose output"
-  c.option "--test", "Deploy and test"
-  c.option "--exclude LIST", "a CSV list of metadata to exclude when creating destructiveChange.xml"
+  c.option "--test", "-T", "Deploy and test"
+  c.option "--exclude LIST", "-x LIST", "a CSV list of metadata to exclude when creating destructiveChange.xml"
   c.option "--append", "Disable destructive change and do an append deploy"
   c.action do |args, options|
 
+    # short flag for test, so that not conflicts with trace
+    options.test = true if options.T
+    options.exclude = options.x if options.x
+    options.sandbox = options.s if options.s
+
     # Parameter validation:
-    if options.env.nil? and sandbox.nil?
-      puts "error: please specify the environment to pull from using --env"
+    if options.sandbox.nil? and sandbox.nil?
+      puts "error: please specify the sandbox to pull from using --sandbox"
       exit 1
     end
-    config[:env] = options.env || sandbox
+    config[:sandbox] = options.sandbox || sandbox
     config[:debug] = options.debug.nil? ? false : true
     config[:test] = options.test.nil? ? false : true
 
@@ -110,7 +117,7 @@ command :push do |c|
       sfdt_tmp = SalesforceDeployTool::App.new config_tmp
       sfdt_tmp.clone
       sfdt_tmp.clean_git_dir
-      sfdt_tmp.pull "INFO: Pulling changes from #{config[:env]} to temporary directory #{config[:tmp_dir]} to generate destructiveChanges.xml  "
+      sfdt_tmp.pull "INFO: Pulling changes from #{config[:sandbox]} to temporary directory #{config[:tmp_dir]} to generate destructiveChanges.xml  "
 
       # Create destructiveChanges.xml
       puts "INFO: Creating destructive changes xml"
@@ -136,7 +143,7 @@ end
 
 command :sandbox do |c|
   c.syntax = 'sf sandbox SANDBOX_NAME'
-  c.summary = 'Set sandbox to work on, this will override --env '
+  c.summary = 'Set sandbox to work on, this will override --sandbox '
   c.description = 'Set the sandbox to work with pull and push. If no parameter defined, it will print the current sandbox selected.'
   c.action do |args, options|
 

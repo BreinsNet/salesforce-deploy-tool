@@ -7,7 +7,7 @@ module SalesforceDeployTool
       @git_repo = config[:git_repo]
       @git_dir = config[:git_dir]
       @env = config[:env]
-      @username = @env == prod ? config[:username] : config[:username] + '.' + @env 
+      @username = @env == 'prod' ? config[:username] : config[:username] + '.' + @env 
       @password = config[:password]
       @debug = config[:debug]
 

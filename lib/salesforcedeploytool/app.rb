@@ -7,7 +7,7 @@ module SalesforceDeployTool
       @git_repo = config[:git_repo]
       @git_dir = config[:git_dir]
       @env = config[:env]
-      @username = config[:username]
+      @username = @env == prod ? config[:username] : config[:username] + '.' + @env 
       @password = config[:password]
       @debug = config[:debug]
 
@@ -46,7 +46,7 @@ module SalesforceDeployTool
     def pull message = nil
 
       env_vars = ""
-      env_vars += " SF_USERNAME=" + @username + "." + @env
+      env_vars += " SF_USERNAME=" + @username
       env_vars += " SF_PASSWORD=" + @password
       env_vars += " SF_SERVERURL=" + @server_url
       cmd = " ant retrieveCode"
@@ -80,7 +80,7 @@ module SalesforceDeployTool
 
       # Set env variables to run ant
       env_vars = ""
-      env_vars += " SF_USERNAME=" + @username + "." + @env
+      env_vars += " SF_USERNAME=" + @username
       env_vars += " SF_PASSWORD=" + @password
       env_vars += " SF_SERVERURL=" + @server_url
 

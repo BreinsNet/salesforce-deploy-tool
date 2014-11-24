@@ -10,6 +10,7 @@ module SalesforceDeployTool
       @username = @env == 'prod' ? config[:username] : config[:username] + '.' + @env 
       @password = config[:password]
       @debug = config[:debug]
+      @test = config[:test]
 
       @server_url = @env == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com'
 

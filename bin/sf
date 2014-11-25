@@ -34,8 +34,17 @@ command :init do |c|
   c.summary = 'Initialize salesforce sandbox from git'
   c.description = "Clone the #{config[:git_repo]} to #{config[:git_dir]}"
   c.example 'usage', 'sf init'
+  c.option "--sandbox NAME", "-s NAME", "use 'prod' to deploy production or sandbox name"
   c.action do |args, options|
-  
+
+    # Parameter validation:
+    options.sandbox = options.s if options.s
+    if options.sandbox.nil? and sandbox.nil?
+      puts "error: please specify sandbox using --sandbox or sf sandbox"
+      exit 1
+    end
+    config[:sandbox] = options.sandbox || sandbox
+
     # Initialize
     sfdt = SalesforceDeployTool::App.new config
 

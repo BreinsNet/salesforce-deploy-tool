@@ -152,7 +152,7 @@ end
 
 command :sandbox do |c|
   c.syntax = 'sf sandbox SANDBOX_NAME'
-  c.summary = 'Set sandbox to work on, this will override --sandbox '
+  c.summary = 'Set sandbox to work on, this can be overriden by --sandbox '
   c.description = 'Set the sandbox to work with pull and push. If no parameter defined, it will print the current sandbox selected.'
   c.action do |args, options|
 

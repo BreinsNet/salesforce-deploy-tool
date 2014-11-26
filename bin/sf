@@ -59,14 +59,12 @@ command :pull do |c|
   c.summary = 'Pull code from the sandbox'
   c.description = "Pull code from sandbox and update #{config[:git_dir]}"
   c.example 'usage:', 'sf pull'
-  c.example 'usage:', 'sf pull -c -d'
-  c.option "--no-clean", "-c", "Do not clean the currrent source code before pulling"
+  c.option "--append", "Pull code appending it to the local repository"
   c.option "--debug", "Verbose output"
   c.option "--sandbox NAME", "-s NAME", "use 'prod' to deploy production or sandbox name"
   c.action do |args, options|
 
-    options.no_clean = true unless options.c
-    options.sandbox = options.s if options.s
+    pp options
 
     # Parameter validation:
     if options.sandbox.nil? and sandbox.nil?
@@ -80,7 +78,7 @@ command :pull do |c|
     sfdt = SalesforceDeployTool::App.new config
 
     # Clean all files from repo
-    sfdt.clean_git_dir unless options.no_clean
+    sfdt.clean_git_dir unless options.append
 
     # Pull the changes
     sfdt.pull "INFO: Pulling changes from #{config[:sandbox]}  "

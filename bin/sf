@@ -64,8 +64,6 @@ command :pull do |c|
   c.option "--sandbox NAME", "-s NAME", "use 'prod' to deploy production or sandbox name"
   c.action do |args, options|
 
-    pp options
-
     # Parameter validation:
     if options.sandbox.nil? and sandbox.nil?
       puts "error: please specify the sandbox to pull from using --sandbox"

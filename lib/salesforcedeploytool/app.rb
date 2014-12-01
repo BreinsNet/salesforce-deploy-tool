@@ -11,6 +11,7 @@ module SalesforceDeployTool
       @password = config[:password]
       @debug = config[:debug]
       @test = config[:test]
+      @deploy_ignore_files = config[:deploy_ignore_files]
 
       @server_url = @sandbox == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com'
 
@@ -107,6 +108,12 @@ module SalesforceDeployTool
       full_cmd = env_vars + cmd
 
       Dir.chdir @git_dir
+
+      # Delete files to be ignored:
+      @deploy_ignore_files.each do |file|
+        FileUtils.rm file if File.exists? file
+      end
+
       exit_code = myexec full_cmd, exec_options
 
       exit exit_code if exit_code != 0

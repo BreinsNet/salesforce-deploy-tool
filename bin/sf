@@ -188,7 +188,7 @@ command :config do |c|
     end
 
     git_email = ask "Please enter your email to be used as commit email on GIT" do |q|
-      q.validate = /^[a-z\.@A-Z\s]+$/ 
+      q.validate = /^.+@.+$/ 
     end
 
     %x[git config --global user.email "#{git_email}"]

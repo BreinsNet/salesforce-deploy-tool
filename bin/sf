@@ -1,20 +1,14 @@
 #!/usr/bin/env ruby
 require 'yaml'
 
-CONFIG_FILE = ['/etc/salesforce.yaml','~/.salesforce.yaml']
+CONFIG_FILE = '~/.salesforce.yaml'
 SANDBOX_CONFIG_FILE = '~/.salesforce.sbox'
 
 config = nil
-CONFIG_FILE.each do |cf|
-  cf = File.expand_path cf
-  if File.exists? cf
-    config = YAML::load File.open(cf).read 
-    break
-  end
-end
-
-if config.nil? 
-  puts "error: /etc/salesforce.yaml or ~/.salesforce.yaml not found"
+if File.exists? File.expand_path CONFIG_FILE
+  config = YAML::load File.open(File.expand_path CONFIG_FILE).read 
+else
+  puts "error: ~/.salesforce.yaml not found"
   exit 1
 end
 
@@ -166,6 +160,44 @@ command :sandbox do |c|
       end
     end
     File.open(File.expand_path(SANDBOX_CONFIG_FILE),'w').write args.first
+
+  end
+end
+
+command :config do |c|
+  c.syntax = 'sf config'
+  c.summary = 'Go through the configuration wizard to config your environment'
+  c.action do |args, options|
+
+    if args.size != 0
+      puts "error: Wrong number of arguments"
+    end
+
+    config_new = {}
+
+    config_new[:username] = ask "Please enter your SalesForce production login user name" do |q|
+      q.validate = /^[\.@a-zA-Z\s]+$/ 
+    end
+
+    config_new[:password] = ask "Please enter your Salesforce production password" do |q|
+      q.echo = "x"
+    end
+
+    git_name = ask "Please enter your Full name to be used as commit owner on GIT" do |q|
+      q.validate = /^[a-zA-Z\s]+$/ 
+    end
+
+    git_email = ask "Please enter your email to be used as commit email on GIT" do |q|
+      q.validate = /^[a-z\.@A-Z\s]+$/ 
+    end
+
+    %x[git config --global user.email "#{git_email}"]
+    %x[git config --global user.name "#{git_name}"]
+
+    config[:username] = config_new[:username].to_s
+    config[:password] = config_new[:password].to_s
+
+    File.open(File.expand_path(CONFIG_FILE),'w').write config.to_yaml
 
   end
 end

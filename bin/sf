@@ -40,8 +40,10 @@ command :init do |c|
   c.option "--sandbox NAME", "-s NAME", "use 'prod' to deploy production or sandbox name"
   c.action do |args, options|
 
-    # Parameter validation:
+    # short flag mapping
     options.sandbox = options.s if options.s
+
+    # Parameter validation:
     if options.sandbox.nil? and sandbox.nil?
       puts "error: please specify sandbox using --sandbox or sf sandbox"
       exit 1
@@ -67,9 +69,12 @@ command :pull do |c|
   c.option "--sandbox NAME", "-s NAME", "use 'prod' to deploy production or sandbox name"
   c.action do |args, options|
 
+    # short flag mapping
+    options.sandbox = options.s if options.s
+
     # Parameter validation:
     if options.sandbox.nil? and sandbox.nil?
-      puts "error: please specify the sandbox to pull from using --sandbox"
+      puts "error: please specify sandbox using --sandbox or sf sandbox"
       exit 1
     end
     config[:sandbox] = options.sandbox || sandbox
@@ -100,7 +105,7 @@ command :push do |c|
   c.option "--append", "Disable destructive change and do an append deploy"
   c.action do |args, options|
 
-    # short flag for test, so that not conflicts with trace
+    # short flag mapping
     options.test = true if options.T
     options.exclude = options.x if options.x
     options.sandbox = options.s if options.s

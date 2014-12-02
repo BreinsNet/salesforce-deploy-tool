@@ -103,6 +103,7 @@ command :push do |c|
   c.option "--test", "-T", "Deploy and test"
   c.option "--exclude LIST", "-x LIST", "a CSV list of metadata to exclude when creating destructiveChange.xml"
   c.option "--append", "Disable destructive change and do an append deploy"
+  c.option "--build_number NUMBER","Record build number on version file"
   c.action do |args, options|
 
     # short flag mapping
@@ -149,6 +150,7 @@ command :push do |c|
     end
 
     # Finally push:
+    sfdt.build_number = options.build_number if not options.build_number.nil?
     sfdt.push
 
   end

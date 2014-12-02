@@ -2,8 +2,11 @@ module SalesforceDeployTool
 
   class App
 
+    attr_accessor :build_number
+
     def initialize config
 
+      @build_number = 'N/A'
       @git_repo = config[:git_repo]
       @git_dir = config[:git_dir]
       @sandbox = config[:sandbox]
@@ -12,10 +15,35 @@ module SalesforceDeployTool
       @debug = config[:debug]
       @test = config[:test]
       @deploy_ignore_files = config[:deploy_ignore_files]
+      @version_file = File.join(@git_dir,config[:version_file])
+      @build_number_pattern = config[:build_number_pattern]
+      @commit_hash_pattern = config[:commit_hash_pattern]
 
       @server_url = @sandbox == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com'
 
       self.clone if ! Dir.exists? File.join(@git_dir,'.git')
+
+    end
+
+    def commit_hash
+
+      g = Git.open(@git_dir)
+
+      File.open(@version_file,'r+') do |file|
+        content = file.read
+        content.gsub!(/#{@build_number_pattern}/,@build_number)
+        content.gsub!(/#{@commit_hash_pattern}/,g.log.last.sha)
+        file.seek(0,IO::SEEK_SET)
+        file.truncate 0
+        file.write content
+      end if File.exists? @version_file
+
+    end
+
+    def clean_version
+
+      g = Git.open(@git_dir)
+      g.checkout @version_file
 
     end
 
@@ -80,6 +108,12 @@ module SalesforceDeployTool
 
     def push
 
+      # Working dir
+      Dir.chdir @git_dir
+
+      # Add the commit hash to the version file
+      commit_hash
+
       # Set env variables to run ant
       env_vars = ""
       env_vars += " SF_USERNAME=" + @username
@@ -107,15 +141,18 @@ module SalesforceDeployTool
       cmd = @test ? " ant deployAndTestCode" : " ant deployCode"
       full_cmd = env_vars + cmd
 
-      Dir.chdir @git_dir
-
       # Delete files to be ignored:
       @deploy_ignore_files.each do |file|
         FileUtils.rm file if File.exists? file
       end
 
+      # Push the code
       exit_code = myexec full_cmd, exec_options
 
+      # Clean changes on version file
+      clean_version
+
+      # exit with exit_code
       exit exit_code if exit_code != 0
 
     end

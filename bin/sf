@@ -1,16 +1,28 @@
 #!/usr/bin/env ruby
 require 'yaml'
+require 'fileutils'
+require 'pp'
 
-CONFIG_FILE = '~/.salesforce.yaml'
-SANDBOX_CONFIG_FILE = '~/.salesforce.sbox'
+CONFIG_DIR = '~/.sf'
+CONFIG_FILE = '~/.sf/credentials.yaml'
+GLOBAL_CONFIG_FILE = '~/.sf/salesforce.yaml'
+SANDBOX_CONFIG_FILE = '~/.sf/salesforce.sbox'
 
-config = nil
-if File.exists? File.expand_path CONFIG_FILE
-  config = YAML::load File.open(File.expand_path CONFIG_FILE).read 
-else
-  puts "error: ~/.salesforce.yaml not found"
-  exit 1
+FileUtils.mkdir File.expand_path CONFIG_DIR if not Dir.exists? File.expand_path CONFIG_DIR
+
+config = {}
+[CONFIG_FILE,GLOBAL_CONFIG_FILE].each do |file|
+  file = File.expand_path file
+  if File.exists? file
+    config_content = YAML::load(File.open(file).read)
+    config.merge! config_content if config_content
+  else
+    FileUtils.touch file
+  end
 end
+
+
+pp config
 
 begin
   sandbox = File.open(File.expand_path(SANDBOX_CONFIG_FILE)).read
@@ -177,11 +189,11 @@ command :config do |c|
 
     config_new[:username] = ask "Please enter your SalesForce production login user name" do |q|
       q.validate = /^[\.@a-zA-Z\s]+$/ 
-    end
+    end.to_s
 
     config_new[:password] = ask "Please enter your Salesforce production password" do |q|
       q.echo = "x"
-    end
+    end.to_s
 
     git_name = ask "Please enter your Full name to be used as commit owner on GIT" do |q|
       q.validate = /^[a-zA-Z\s]+$/ 
@@ -191,13 +203,13 @@ command :config do |c|
       q.validate = /^.+@.+$/ 
     end
 
-    %x[git config --global user.email "#{git_email}"]
-    %x[git config --global user.name "#{git_name}"]
+    #%x[git config --global user.email "#{git_email}"]
+    #%x[git config --global user.name "#{git_name}"]
 
-    config[:username] = config_new[:username].to_s
-    config[:password] = config_new[:password].to_s
+    config[:username] = config_new[:username]
+    config[:password] = config_new[:password]
 
-    File.open(File.expand_path(CONFIG_FILE),'w').write config.to_yaml
+    File.open(File.expand_path(CONFIG_FILE),'w').write config_new.to_yaml
 
   end
 end

@@ -203,8 +203,8 @@ command :config do |c|
       q.validate = /^.+@.+$/ 
     end
 
-    #%x[git config --global user.email "#{git_email}"]
-    #%x[git config --global user.name "#{git_name}"]
+    %x[git config --global user.email "#{git_email}"]
+    %x[git config --global user.name "#{git_name}"]
 
     config[:username] = config_new[:username]
     config[:password] = config_new[:password]

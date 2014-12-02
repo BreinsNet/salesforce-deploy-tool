@@ -21,9 +21,6 @@ config = {}
   end
 end
 
-
-pp config
-
 begin
   sandbox = File.open(File.expand_path(SANDBOX_CONFIG_FILE)).read
 rescue

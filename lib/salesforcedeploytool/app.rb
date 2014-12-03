@@ -47,7 +47,7 @@ module SalesforceDeployTool
     def clean_version
 
       g = Git.open(@git_dir)
-      g.checkout @version_file
+      g.checkout @version_file if File.exists? @version_file
 
     end
 

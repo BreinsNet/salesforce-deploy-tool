@@ -5,20 +5,24 @@ module SalesforceDeployTool
     attr_accessor :build_number
 
     def initialize config
-
-      @build_number = 'N/A'
-      @git_repo = config[:git_repo]
-      @git_dir = config[:git_dir]
-      @sandbox = config[:sandbox]
-      @username = @sandbox == 'prod' ? config[:username] : config[:username] + '.' + @sandbox 
-      @password = config[:password]
+      
       @debug = config[:debug]
       @test = config[:test]
-      @deploy_ignore_files = config[:deploy_ignore_files]
-      @version_file = File.join(@git_dir,config[:version_file])
-      @build_number_pattern = config[:build_number_pattern]
-      @commit_hash_pattern = config[:commit_hash_pattern]
 
+      @build_number = 'N/A'
+      ( @git_repo = config[:git_repo] ).nil? and raise "Invalid Config: git_repo not found"
+      ( @git_dir = config[:git_dir] ).nil? and raise "Invalid Config: git_dir not found"
+      ( @sandbox = config[:sandbox] ).nil? and raise "Invalid Config: sandbox not found"
+      ( @password = config[:password] ).nil? and raise "Invalid Config: password not found, please run `sf config`"
+      ( @deploy_ignore_files = config[:deploy_ignore_files] ).nil? and raise "Invalid Config: deploy_ignore_files not found"
+      ( @build_number_pattern = config[:build_number_pattern] ).nil? and raise "Invalid Config: build_number_pattern not found"
+      ( @commit_hash_pattern = config[:commit_hash_pattern] ).nil? and raise "Invalid Config: commit_hash_pattern not found"
+
+      config[:version_file].nil? and raise "Invalid Config: version_file not found"
+      config[:username].nil? and raise "Invalid Config: username not found, please run `sf config`"
+
+      @version_file = File.join(@git_dir,config[:version_file])
+      @username = @sandbox == 'prod' ? config[:username] : config[:username] + '.' + @sandbox 
       @server_url = @sandbox == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com'
 
       self.clone if ! Dir.exists? File.join(@git_dir,'.git')
@@ -101,6 +105,8 @@ module SalesforceDeployTool
       end
 
       exit_code = myexec full_cmd, exec_options
+
+      clean_version
 
       exit exit_code if exit_code != 0
 

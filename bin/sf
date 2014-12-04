@@ -123,6 +123,10 @@ command :push do |c|
     # Initialize
     sfdt = SalesforceDeployTool::App.new config
 
+    # Remove destructive change if there is one
+    DESTRUCTIVE_CHANGE_FILE = File.join(config[:git_dir],'src','destructiveChanges.xml')
+    FileUtils.rm DESTRUCTIVE_CHANGE_FILE if File.exists? DESTRUCTIVE_CHANGE_FILE
+
     # Push the code without destructiveChanges.xml. This step is allways necessary
     # even when it is a destructive change. This is because if a class is referencing
     # a field to be deleted, then we first need to push the class to remove that 
@@ -146,7 +150,7 @@ command :push do |c|
       dc_gen = Dcgen::App.new
       dc_gen.master = File.join(config[:git_dir],'src')
       dc_gen.destination = File.join(config[:tmp_dir],'src')
-      dc_gen.output = File.join(config[:git_dir],'src','destructiveChanges.xml')
+      dc_gen.output = DESTRUCTIVE_CHANGE_FILE
       dc_gen.exclude = options.exclude.split(',') unless options.exclude.nil?
 
       # Capture stdout when running generate_destructive_Changes, TODO: fix dcgen

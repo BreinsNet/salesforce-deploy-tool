@@ -123,6 +123,14 @@ command :push do |c|
     # Initialize
     sfdt = SalesforceDeployTool::App.new config
 
+    # Push the code without destructiveChanges.xml. This step is allways necessary
+    # even when it is a destructive change. This is because if a class is referencing
+    # a field to be deleted, then we first need to push the class to remove that 
+    # reference and only then SF will allow us to remove the field on the second
+    # push
+    sfdt.build_number = options.build_number if not options.build_number.nil?
+    sfdt.push
+
     if ! options.append
       # Pull changes from sandbox to temporary directory:
       config_tmp = config.clone
@@ -147,12 +155,10 @@ command :push do |c|
       $stdout = stringio unless options.debug
       dc_gen.generate_destructive_changes
       $stdout = stdout_tmp
+    
+      # Destructive push
+      sfdt.push
     end
-
-    # Finally push:
-    sfdt.build_number = options.build_number if not options.build_number.nil?
-    sfdt.push
-
   end
 end
 

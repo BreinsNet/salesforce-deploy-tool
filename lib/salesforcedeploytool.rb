@@ -1,4 +1,5 @@
 require "rubygems"
+require "pathname"
 require "commander/import"
 require "git"
 require "pp"

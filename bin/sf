@@ -154,7 +154,12 @@ command :push do |c|
     # reference and only then SF will allow us to remove the field on the second
     # push
     sfdt.build_number = options.build_number if not options.build_number.nil?
-    sfdt.push
+    sfdt.set_version
+    begin
+      sfdt.push
+    ensure
+      sfdt.clean_version
+    end
 
     if ! options.append
       # Pull changes from sandbox to temporary directory:
@@ -182,7 +187,11 @@ command :push do |c|
       $stdout = stdout_tmp
     
       # Destructive push
-      sfdt.push
+      begin
+        sfdt.push
+      ensure
+        sfdt.clean_version
+      end
     end
   end
 end

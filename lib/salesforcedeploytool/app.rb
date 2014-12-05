@@ -27,7 +27,7 @@ module SalesforceDeployTool
 
     end
 
-    def commit_hash
+    def set_version
 
       g = Git.open(@git_dir)
 
@@ -104,8 +104,6 @@ module SalesforceDeployTool
 
       exit_code = myexec full_cmd, exec_options
 
-      clean_version
-
       exit exit_code if exit_code != 0
 
     end
@@ -114,9 +112,6 @@ module SalesforceDeployTool
 
       # Working dir
       Dir.chdir @git_dir
-
-      # Add the commit hash to the version file
-      commit_hash
 
       # Set env variables to run ant
       env_vars = ""
@@ -152,9 +147,6 @@ module SalesforceDeployTool
 
       # Push the code
       exit_code = myexec full_cmd, exec_options
-
-      # Clean changes on version file
-      clean_version
 
       # exit with exit_code
       exit exit_code if exit_code != 0

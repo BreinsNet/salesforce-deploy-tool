@@ -105,6 +105,7 @@ command :pull do |c|
 
     # Pull the changes
     sfdt.pull "INFO: Pulling changes from #{config[:sandbox]}  "
+    sfdt.clean_version
 
   end
 

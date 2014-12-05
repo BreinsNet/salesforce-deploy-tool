@@ -17,11 +17,11 @@ module SalesforceDeployTool
       ( @deploy_ignore_files = config[:deploy_ignore_files] ).nil? and raise "Invalid Config: deploy_ignore_files not found"
       ( @build_number_pattern = config[:build_number_pattern] ).nil? and raise "Invalid Config: build_number_pattern not found"
       ( @commit_hash_pattern = config[:commit_hash_pattern] ).nil? and raise "Invalid Config: commit_hash_pattern not found"
+      ( @version_file = config[:version_file] ).nil? and raise "Invalid Config: version_file not found"
 
-      config[:version_file].nil? and raise "Invalid Config: version_file not found"
       config[:username].nil? and raise "Invalid Config: username not found, please run `sf config`"
+      config[:password].nil? and raise "Invalid Config: password not found, please run `sf config`"
 
-      @version_file = File.join(@git_dir,config[:version_file])
       @username = @sandbox == 'prod' ? config[:username] : config[:username] + '.' + @sandbox 
       @server_url = @sandbox == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com'
 

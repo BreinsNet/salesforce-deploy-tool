@@ -3,6 +3,7 @@ module SalesforceDeployTool
   class App
 
     attr_accessor :build_number
+    attr_accessor :test
 
     def initialize config
       

@@ -135,8 +135,8 @@ command :push do |c|
       exit 1
     end
     config[:sandbox] = options.sandbox || sandbox
-    config[:debug] = options.debug.nil? ? false : true
     config[:test] = options.test.nil? ? false : true
+    config[:debug] = options.debug.nil? ? false : true
 
     # Parameter Normalization
     config[:git_dir] = File.expand_path config[:git_dir]
@@ -157,8 +157,15 @@ command :push do |c|
     # reference and only then SF will allow us to remove the field on the second
     # push
     begin
+      # Set version
       sfdt.build_number = options.build_number if not options.build_number.nil?
       sfdt.set_version
+
+      # Disable test deploy unless is an append. The test deploy will happen
+      # at the end
+      sfdt.test = false if ! options.append
+
+      # push
       sfdt.push
     ensure
       sfdt.clean_version
@@ -191,8 +198,14 @@ command :push do |c|
     
       # Destructive push
       begin
+        # Set version
         sfdt.build_number = options.build_number if not options.build_number.nil?
         sfdt.set_version
+
+        # Enable test if option enabled
+        sfdt.test = options.test.nil? ? false : true
+
+        # Push
         sfdt.push
       ensure
         sfdt.clean_version

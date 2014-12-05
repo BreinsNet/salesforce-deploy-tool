@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require 'pp'
 require 'yaml'
+require 'fileutils'
 
 CONFIG_DIR = '~/.sf'
 CONFIG_FILE = '~/.sf/credentials.yaml'

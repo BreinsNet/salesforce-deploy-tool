@@ -3,6 +3,10 @@ require 'pp'
 require 'yaml'
 require 'fileutils'
 
+# Disable stdout buffer
+STDOUT.sync = true
+
+# Static files
 CONFIG_DIR = '~/.sf'
 CONFIG_FILE = '~/.sf/credentials.yaml'
 GLOBAL_CONFIG_FILE = '~/.sf/salesforce.yaml'

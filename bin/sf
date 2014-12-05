@@ -25,15 +25,16 @@ config = {}
 end
 
 # Grab variables from env if not in the config files
-config[:git_dir] = ENV["GIT_DIR"] || config[:git_dir]
-config[:tmp_dir] = ENV["TMP_DIR"] || config[:tmp_dir]
-config[:version_file] = ENV["VERSION_FILE"] || config[:version_file]
-config[:build_number_pattern] = ENV["BUILD_NUMBER_PATTERN"] || config[:build_number_pattern]
-config[:commit_hash_pattern] = ENV["COMMIT_HASH_PATTERN"] || config[:commit_hash_pattern]
-config[:git_repo] = ENV["GIT_REPO"] || config[:git_repo]
-config[:deploy_ignore_files] = ENV["DEPLOY_IGNORE_FILES"].split(',') || config[:deploy_ignore_files]
-config[:username] = ENV["USERNAME"] || config[:username]
-config[:password] = ENV["PASSWORD"] || config[:password]
+config[:git_dir]               =  ENV["GIT_DIR"]               ||  config[:git_dir]
+config[:tmp_dir]               =  ENV["TMP_DIR"]               ||  config[:tmp_dir]
+config[:version_file]          =  ENV["VERSION_FILE"]          ||  config[:version_file]
+config[:build_number_pattern]  =  ENV["BUILD_NUMBER_PATTERN"]  ||  config[:build_number_pattern]
+config[:commit_hash_pattern]   =  ENV["COMMIT_HASH_PATTERN"]   ||  config[:commit_hash_pattern]
+config[:git_repo]              =  ENV["GIT_REPO"]              ||  config[:git_repo]
+config[:username]              =  ENV["USERNAME"]              ||  config[:username]
+config[:password]              =  ENV["PASSWORD"]              ||  config[:password]
+
+config[:deploy_ignore_files] = ENV["DEPLOY_IGNORE_FILES"].nil? ? config[:deploy_ignore_files] : ENV["DEPLOY_IGNORE_FILES"].split(',')
 
 # Read sandbox environment
 

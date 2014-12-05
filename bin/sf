@@ -154,9 +154,9 @@ command :push do |c|
     # a field to be deleted, then we first need to push the class to remove that 
     # reference and only then SF will allow us to remove the field on the second
     # push
-    sfdt.build_number = options.build_number if not options.build_number.nil?
-    sfdt.set_version
     begin
+      sfdt.build_number = options.build_number if not options.build_number.nil?
+      sfdt.set_version
       sfdt.push
     ensure
       sfdt.clean_version
@@ -189,6 +189,8 @@ command :push do |c|
     
       # Destructive push
       begin
+        sfdt.build_number = options.build_number if not options.build_number.nil?
+        sfdt.set_version
         sfdt.push
       ensure
         sfdt.clean_version

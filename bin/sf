@@ -1,12 +1,14 @@
 #!/usr/bin/env ruby
-require 'yaml'
-require 'fileutils'
 require 'pp'
+require 'yaml'
 
 CONFIG_DIR = '~/.sf'
 CONFIG_FILE = '~/.sf/credentials.yaml'
 GLOBAL_CONFIG_FILE = '~/.sf/salesforce.yaml'
 SANDBOX_CONFIG_FILE = '~/.sf/salesforce.sbox'
+
+# Load configurations, if directories and files don't 
+# exists, create them empty
 
 FileUtils.mkdir File.expand_path CONFIG_DIR if not Dir.exists? File.expand_path CONFIG_DIR
 
@@ -20,6 +22,19 @@ config = {}
     FileUtils.touch file
   end
 end
+
+# Grab variables from env if not in the config files
+config[:git_dir] = ENV["GIT_DIR"] || config[:git_dir]
+config[:tmp_dir] = ENV["TMP_DIR"] || config[:tmp_dir]
+config[:version_file] = ENV["VERSION_FILE"] || config[:version_file]
+config[:build_number_pattern] = ENV["BUILD_NUMBER_PATTERN"] || config[:build_number_pattern]
+config[:commit_hash_pattern] = ENV["COMMIT_HASH_PATTERN"] || config[:commit_hash_pattern]
+config[:git_repo] = ENV["GIT_REPO"] || config[:git_repo]
+config[:deploy_ignore_files] = ENV["DEPLOY_IGNORE_FILES"].split(',') || config[:deploy_ignore_files]
+config[:username] = ENV["USERNAME"] || config[:username]
+config[:password] = ENV["PASSWORD"] || config[:password]
+
+# Read sandbox environment
 
 begin
   sandbox = File.open(File.expand_path(SANDBOX_CONFIG_FILE)).read
@@ -119,6 +134,12 @@ command :push do |c|
     config[:sandbox] = options.sandbox || sandbox
     config[:debug] = options.debug.nil? ? false : true
     config[:test] = options.test.nil? ? false : true
+
+    # Parameter Normalization
+    config[:git_dir] = File.expand_path config[:git_dir]
+    config[:tmp_dir] = File.expand_path config[:tmp_dir]
+    config[:version_file] = File.expand_path config[:version_file]
+    config[:deploy_ignore_files].map! {|f| File.expand_path File.join(config[:git_dir],f)}
 
     # Initialize
     sfdt = SalesforceDeployTool::App.new config

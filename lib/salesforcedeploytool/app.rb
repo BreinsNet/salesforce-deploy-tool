@@ -25,8 +25,6 @@ module SalesforceDeployTool
       @username = @sandbox == 'prod' ? config[:username] : config[:username] + '.' + @sandbox 
       @server_url = @sandbox == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com'
 
-      self.clone if ! Dir.exists? File.join(@git_dir,'.git')
-
     end
 
     def commit_hash

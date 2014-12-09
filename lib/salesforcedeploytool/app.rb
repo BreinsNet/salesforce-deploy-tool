@@ -35,7 +35,7 @@ module SalesforceDeployTool
       File.open(@version_file,'r+') do |file|
         content = file.read
         content.gsub!(/#{@build_number_pattern}/,@build_number)
-        content.gsub!(/#{@commit_hash_pattern}/,g.log.last.sha)
+        content.gsub!(/#{@commit_hash_pattern}/,g.log.first.sha)
         file.seek(0,IO::SEEK_SET)
         file.truncate 0
         file.write content

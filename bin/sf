@@ -142,14 +142,8 @@ command :push do |c|
     config[:test] = options.test.nil? ? false : true
     config[:debug] = options.debug.nil? ? false : true
 
-    # Parameter Normalization
-    config[:git_dir] = File.expand_path config[:git_dir]
-    config[:tmp_dir] = File.expand_path config[:tmp_dir]
-    config[:version_file] = File.expand_path config[:version_file]
-    config[:deploy_ignore_files].map! {|f| File.expand_path File.join(config[:git_dir],f)}
-
     # Initialize
-    sfdt = SalesforceDeployTool::App.new config
+    sfdt = SalesforceDeployTool::App.new config.clone
 
     # Remove destructive change if there is one
     DESTRUCTIVE_CHANGE_FILE = File.join(config[:git_dir],'src','destructiveChanges.xml')

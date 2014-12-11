@@ -6,11 +6,19 @@ module SalesforceDeployTool
     attr_accessor :test
 
     def initialize config
-      
+     
+      # Parameter Normalization
+      config[:git_dir] = File.expand_path config[:git_dir]
+      config[:tmp_dir] = File.expand_path config[:tmp_dir]
+      config[:version_file] = File.expand_path config[:version_file]
+      config[:deploy_ignore_files] = config[:deploy_ignore_files].map {|f| File.expand_path File.join(config[:git_dir],f)}
+
+      # Defaults
       @debug = config[:debug]
       @test = config[:test]
-
       @build_number = 'N/A'
+
+      # Config file validation:
       ( @git_repo = config[:git_repo] ).nil? and raise "Invalid Config: git_repo not found"
       ( @git_dir = config[:git_dir] ).nil? and raise "Invalid Config: git_dir not found"
       ( @sandbox = config[:sandbox] ).nil? and raise "Invalid Config: sandbox not found"
@@ -19,6 +27,8 @@ module SalesforceDeployTool
       ( @build_number_pattern = config[:build_number_pattern] ).nil? and raise "Invalid Config: build_number_pattern not found"
       ( @commit_hash_pattern = config[:commit_hash_pattern] ).nil? and raise "Invalid Config: commit_hash_pattern not found"
       ( @version_file = config[:version_file] ).nil? and raise "Invalid Config: version_file not found"
+
+      
 
       config[:username].nil? and raise "Invalid Config: username not found, please run `sf config`"
       config[:password].nil? and raise "Invalid Config: password not found, please run `sf config`"
@@ -103,7 +113,13 @@ module SalesforceDeployTool
         exec_options[:failmsg] = nil
       end
 
+      # Pull the code
       exit_code = myexec full_cmd, exec_options
+
+      # Delete files to be ignored:
+      @deploy_ignore_files.each do |file|
+        FileUtils.rm file if File.exists? file
+      end
 
       exit exit_code if exit_code != 0
 

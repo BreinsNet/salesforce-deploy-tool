@@ -38,6 +38,12 @@ config[:git_repo]              =  ENV["GIT_REPO"]              ||  config[:git_r
 config[:username]              =  ENV["USERNAME"]              ||  config[:username]
 config[:password]              =  ENV["PASSWORD"]              ||  config[:password]
 
+# Normalize file paths:
+config[:git_dir] = File.expand_path config[:git_dir]
+config[:tmp_dir] = File.expand_path config[:tmp_dir]
+config[:version_file] = File.expand_path config[:version_file]
+
+# Relative ignore files
 config[:deploy_ignore_files] = ENV["DEPLOY_IGNORE_FILES"].nil? ? config[:deploy_ignore_files] : ENV["DEPLOY_IGNORE_FILES"].split(',')
 
 # Read sandbox environment

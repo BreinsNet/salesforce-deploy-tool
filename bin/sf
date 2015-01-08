@@ -176,6 +176,7 @@ command :push do |c|
     end
 
     if ! options.append
+
       # Pull changes from sandbox to temporary directory:
       config_tmp = config.clone
       config_tmp[:git_dir] = config_tmp[:tmp_dir]
@@ -192,15 +193,10 @@ command :push do |c|
       dc_gen.destination = File.join(config[:tmp_dir],'src')
       dc_gen.output = DESTRUCTIVE_CHANGE_FILE
       dc_gen.exclude = options.exclude.split(',') unless options.exclude.nil?
-
-      # Capture stdout when running generate_destructive_Changes, TODO: fix dcgen
-      stringio = StringIO.new
-      stdout_tmp = $stdout
-      $stdout = stringio unless options.debug
+      dc_gen.verbose = false if not options.debug
       dc_gen.generate_destructive_changes
-      $stdout = stdout_tmp
     
-      # Destructive push
+      # Push code to sandbox with Destructive changes
       begin
         # Set version
         sfdt.build_number = options.build_number if not options.build_number.nil?

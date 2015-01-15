@@ -155,28 +155,7 @@ command :push do |c|
     DESTRUCTIVE_CHANGE_FILE = File.join(config[:git_dir],'src','destructiveChanges.xml')
     FileUtils.rm DESTRUCTIVE_CHANGE_FILE if File.exists? DESTRUCTIVE_CHANGE_FILE
 
-    # Push the code without destructiveChanges.xml. This step is allways necessary
-    # even when it is a destructive change. This is because if a class is referencing
-    # a field to be deleted, then we first need to push the class to remove that 
-    # reference and only then SF will allow us to remove the field on the second
-    # push
-    begin
-      # Set version
-      sfdt.build_number = options.build_number if not options.build_number.nil?
-      sfdt.set_version
-
-      # Disable test deploy unless is an append. The test deploy will happen
-      # at the end
-      sfdt.test = false if ! options.append
-
-      # push
-      sfdt.push
-    ensure
-      sfdt.clean_version
-    end
-
     if ! options.append
-
       # Pull changes from sandbox to temporary directory:
       config_tmp = config.clone
       config_tmp[:git_dir] = config_tmp[:tmp_dir]

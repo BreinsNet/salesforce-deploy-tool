@@ -175,21 +175,23 @@ command :push do |c|
       dc_gen.verbose = false if not options.debug
       dc_gen.generate_destructive_changes
     
-      # Push code to sandbox with Destructive changes
-      begin
-        # Set version
-        sfdt.build_number = options.build_number if not options.build_number.nil?
-        sfdt.set_version
-
-        # Enable test if option enabled
-        sfdt.test = options.test.nil? ? false : true
-
-        # Push
-        sfdt.push
-      ensure
-        sfdt.clean_version
-      end
     end
+
+    # Push code to sandbox
+    begin
+      # Set version
+      sfdt.build_number = options.build_number if not options.build_number.nil?
+      sfdt.set_version
+
+      # Enable test if option enabled
+      sfdt.test = options.test.nil? ? false : true
+
+      # Push
+      sfdt.push
+    ensure
+      sfdt.clean_version
+    end
+
   end
 end
 

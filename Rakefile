@@ -1,4 +1,11 @@
 require "bundler/gem_tasks"
+require "aruba"
+
+# Cucumber tasks
+$:.unshift(File.dirname(__FILE__) + '/../../lib')
+require 'cucumber/rake/task'
+
+Cucumber::Rake::Task.new
 
 # extracted from https://github.com/grosser/project_template
 rule /^version:bump:.*/ do |t|

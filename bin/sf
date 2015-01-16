@@ -7,16 +7,15 @@ require 'fileutils'
 STDOUT.sync = true
 
 # Static files
-CONFIG_DIR = '~/.sf'
-CONFIG_FILE = '~/.sf/credentials.yaml'
-GLOBAL_CONFIG_FILE = '~/.sf/salesforce.yaml'
-SANDBOX_CONFIG_FILE = '~/.sf/salesforce.sbox'
+CONFIG_DIR = File.expand_path '~/.sf'
+CONFIG_FILE = File.expand_path '~/.sf/credentials.yaml'
+GLOBAL_CONFIG_FILE = File.expand_path '~/.sf/salesforce.yaml'
+SANDBOX_CONFIG_FILE = File.expand_path '~/.sf/salesforce.sbox'
 
-# Load configurations, if directories and files don't 
-# exists, create them empty
+# Create .sf dir if doesn't exists
+FileUtils.mkdir CONFIG_DIR if not Dir.exists? CONFIG_DIR
 
-FileUtils.mkdir File.expand_path CONFIG_DIR if not Dir.exists? File.expand_path CONFIG_DIR
-
+# Load configurations
 config = {}
 [CONFIG_FILE,GLOBAL_CONFIG_FILE].each do |file|
   file = File.expand_path file
@@ -37,14 +36,15 @@ config[:commit_hash_pattern]   =  ENV["COMMIT_HASH_PATTERN"]   ||  config[:commi
 config[:git_repo]              =  ENV["GIT_REPO"]              ||  config[:git_repo]
 config[:username]              =  ENV["USERNAME"]              ||  config[:username]
 config[:password]              =  ENV["PASSWORD"]              ||  config[:password]
+config[:deploy_ignore_files]   =  ENV["DEPLOY_IGNORE_FILES"].nil? ? config[:deploy_ignore_files] : ENV["DEPLOY_IGNORE_FILES"].split(',')
+
+# Minimal config validation
+abort "Config error: git_dir not found in #{GLOBAL_CONFIG_FILE} or through GIT_DIR" if config[:git_dir].nil?
+abort "Config error: tmp_dir not found in #{GLOBAL_CONFIG_FILE} or through TMP_DIR" if config[:tmp_dir].nil?
 
 # Normalize file paths:
 config[:git_dir] = File.expand_path config[:git_dir]
 config[:tmp_dir] = File.expand_path config[:tmp_dir]
-config[:version_file] = File.expand_path config[:version_file]
-
-# Relative ignore files
-config[:deploy_ignore_files] = ENV["DEPLOY_IGNORE_FILES"].nil? ? config[:deploy_ignore_files] : ENV["DEPLOY_IGNORE_FILES"].split(',')
 
 # Read sandbox environment
 
@@ -246,12 +246,17 @@ command :config do |c|
       q.validate = /^\S+@\S+$/ 
     end
 
+    sandbox = ask "Please enter your sandbox so to be used as default when push and pull" do |q|
+      q.validate = /^[a-zA-Z]+$/ 
+    end
+
     %x[git config --global user.email "#{git_email}"]
     %x[git config --global user.name "#{git_name}"]
 
     config[:username] = config_new[:username]
     config[:password] = config_new[:password]
 
+    File.open(File.expand_path(SANDBOX_CONFIG_FILE),'w').write sandbox
     File.open(File.expand_path(CONFIG_FILE),'w').write config_new.to_yaml
 
   end

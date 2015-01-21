@@ -122,3 +122,18 @@ Feature: Push code to salesforce
     ^INFO: Deploying code to env_a:.*OK$
     """
 
+  @new
+  Scenario: Push code to a sandbox excluding files
+    Given I set the environment variables to:
+      | variable                  | value                                                   |
+      | SFDT_DEPLOY_IGNORE_FILES  | src/layouts/test.layout,src/layouts/another_test.layout |
+    When I run `sf push`
+    #TODO: Then the files listed in SFDT_DEPLOY_IGNORE_FILES should be ignored by sf when deploying 
+    Then the exit status should be 0
+    And the output should match:
+    """
+    ^INFO: Pulling changes from env_a to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
+    ^INFO: Creating destructive changes xml$
+    ^INFO: Deploying code to env_a:.*OK$
+    """
+

@@ -36,7 +36,7 @@ config[:commit_hash_pattern]   =  ENV["SFDT_COMMIT_HASH_PATTERN"]   ||  config[:
 config[:git_repo]              =  ENV["SFDT_GIT_REPO"]              ||  config[:git_repo]
 config[:username]              =  ENV["SFDT_USERNAME"]              ||  config[:username]
 config[:password]              =  ENV["SFDT_PASSWORD"]              ||  config[:password]
-config[:deploy_ignore_files]   =  ENV["SFDT_DEPLOY_IGNORE_FILES"].nil? ? config[:deploy_ignore_files] : ENV["DEPLOY_IGNORE_FILES"].split(',')
+config[:deploy_ignore_files]   =  ENV["SFDT_DEPLOY_IGNORE_FILES"].nil? ? config[:deploy_ignore_files] : ENV["SFDT_DEPLOY_IGNORE_FILES"].split(',')
 
 # Default values
 config[:buildxml_dir] = ENV["SFDT_BUILDXML_DIR"] || config[:buildxml_dir] || ''

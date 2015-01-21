@@ -136,9 +136,8 @@ command :push do |c|
       config_tmp = config.clone
       config_tmp[:git_dir] = config_tmp[:tmp_dir]
       FileUtils.rm_rf config_tmp[:git_dir] if File.exists? config_tmp[:git_dir]
+      FileUtils.cp_r config[:git_dir],config_tmp[:git_dir]
       sfdt_tmp = SalesforceDeployTool::App.new config_tmp
-      sfdt_tmp.clone
-      sfdt_tmp.clean_git_dir
       sfdt_tmp.pull "INFO: Pulling changes from #{config[:sandbox]} to temporary directory #{config[:tmp_dir]} to generate destructiveChanges.xml  "
 
       # Create destructiveChanges.xml
@@ -232,8 +231,6 @@ command :config do |c|
     config[:username] = config_new[:username]
     config[:password] = config_new[:password]
     config[:sandbox] = sandbox
-
-    pp config
 
     File.open(File.expand_path(SANDBOX_CONFIG_FILE),'w').write sandbox
     File.open(File.expand_path(CONFIG_FILE),'w').write config_new.to_yaml

@@ -7,15 +7,6 @@ module SalesforceDeployTool
 
     def initialize config
      
-      # Defaults
-      @debug = config[:debug]
-      @test = config[:test]
-      @build_number = 'N/A'
-      @version_file = ''
-      @build_number_pattern = ''
-      @commit_hash_pattern = ''
-      @deploy_ignore_files = []
-
       # Config file validation:
       ( @git_repo = config[:git_repo] ).nil? and raise "Invalid Config: git_repo not found"
       ( @git_dir = config[:git_dir] ).nil? and raise "Invalid Config: git_dir not found"
@@ -27,11 +18,23 @@ module SalesforceDeployTool
       # Parameter Normalization
       @git_dir = File.expand_path config[:git_dir]
       @tmp_dir = File.expand_path config[:tmp_dir]
-      @version_file = File.expand_path config[:version_file]
-      @deploy_ignore_files = config[:deploy_ignore_files].map {|f| File.expand_path File.join(config[:git_dir],f)}
-
+      @version_file = File.join(@git_dir,config[:version_file]) if !config[:version_file].nil?
+      @deploy_ignore_files = config[:deploy_ignore_files].map {|f| File.expand_path File.join(config[:git_dir],f)} if ! config[:deploy_ignore_files].nil?
+      @build_number_pattern = config[:build_number_pattern]
+      @commit_hash_pattern = config[:commit_hash_pattern]
+      @buildxml_dir = config[:buildxml_dir]
       @username = @sandbox == 'prod' ? @username : @username + '.' + @sandbox 
       @server_url = @sandbox == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com'
+
+      # Defaults
+      @debug ||= config[:debug]
+      @test ||= config[:test]
+      @build_number ||= 'N/A'
+      @version_file ||= false
+      @buildxml_dir ||= ''
+      @build_number_pattern ||= false
+      @commit_hash_pattern ||= false
+      @deploy_ignore_files ||= []
 
     end
 
@@ -41,19 +44,19 @@ module SalesforceDeployTool
 
       File.open(@version_file,'r+') do |file|
         content = file.read
-        content.gsub!(/#{@build_number_pattern}/,@build_number)
-        content.gsub!(/#{@commit_hash_pattern}/,g.log.first.sha)
+        content.gsub!(/#{@build_number_pattern}/,@build_number) if @build_number_pattern
+        content.gsub!(/#{@commit_hash_pattern}/,g.log.first.sha) if @commit_hash_pattern
         file.seek(0,IO::SEEK_SET)
         file.truncate 0
         file.write content
-      end if File.exists? @version_file
+      end if @version_file && File.exists?(@version_file)
 
     end
 
     def clean_version
 
       g = Git.open(@git_dir)
-      g.checkout @version_file if File.exists? @version_file
+      g.checkout @version_file if @version_file && File.exists?(@version_file)
 
     end
 
@@ -93,7 +96,7 @@ module SalesforceDeployTool
 
       full_cmd = env_vars + cmd
 
-      Dir.chdir @git_dir
+      Dir.chdir File.join(@git_dir,@buildxml_dir)
 
       exec_options = {
         :stderr => @debug,
@@ -125,7 +128,7 @@ module SalesforceDeployTool
     def push
 
       # Working dir
-      Dir.chdir @git_dir
+      Dir.chdir File.join(@git_dir,@buildxml_dir)
 
       # Set env variables to run ant
       env_vars = ""

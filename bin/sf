@@ -28,19 +28,20 @@ config = {}
 end
 
 # Grab variables from env if not in the config files
-config[:git_dir]               =  ENV["GIT_DIR"]               ||  config[:git_dir]
-config[:tmp_dir]               =  ENV["TMP_DIR"]               ||  config[:tmp_dir]
-config[:version_file]          =  ENV["VERSION_FILE"]          ||  config[:version_file]
-config[:build_number_pattern]  =  ENV["BUILD_NUMBER_PATTERN"]  ||  config[:build_number_pattern]
-config[:commit_hash_pattern]   =  ENV["COMMIT_HASH_PATTERN"]   ||  config[:commit_hash_pattern]
-config[:git_repo]              =  ENV["GIT_REPO"]              ||  config[:git_repo]
-config[:username]              =  ENV["USERNAME"]              ||  config[:username]
-config[:password]              =  ENV["PASSWORD"]              ||  config[:password]
-config[:deploy_ignore_files]   =  ENV["DEPLOY_IGNORE_FILES"].nil? ? config[:deploy_ignore_files] : ENV["DEPLOY_IGNORE_FILES"].split(',')
+config[:buildxml_dir]          =  ENV["SFDT_BUILDXML_DIR"]          ||  config[:buildxml_dir]
+config[:git_dir]               =  ENV["SFDT_GIT_DIR"]               ||  config[:git_dir]
+config[:tmp_dir]               =  ENV["SFDT_TMP_DIR"]               ||  config[:tmp_dir]
+config[:version_file]          =  ENV["SFDT_VERSION_FILE"]          ||  config[:version_file]
+config[:build_number_pattern]  =  ENV["SFDT_BUILD_NUMBER_PATTERN"]  ||  config[:build_number_pattern]
+config[:commit_hash_pattern]   =  ENV["SFDT_COMMIT_HASH_PATTERN"]   ||  config[:commit_hash_pattern]
+config[:git_repo]              =  ENV["SFDT_GIT_REPO"]              ||  config[:git_repo]
+config[:username]              =  ENV["SFDT_USERNAME"]              ||  config[:username]
+config[:password]              =  ENV["SFDT_PASSWORD"]              ||  config[:password]
+config[:deploy_ignore_files]   =  ENV["SFDT_DEPLOY_IGNORE_FILES"].nil? ? config[:deploy_ignore_files] : ENV["DEPLOY_IGNORE_FILES"].split(',')
 
 # Minimal config validation
-abort "Config error: git_dir not found in #{GLOBAL_CONFIG_FILE} or through GIT_DIR" if config[:git_dir].nil?
-abort "Config error: tmp_dir not found in #{GLOBAL_CONFIG_FILE} or through TMP_DIR" if config[:tmp_dir].nil?
+abort "Config error: git_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_GIT_DIR" if config[:git_dir].nil?
+abort "Config error: tmp_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_TMP_DIR" if config[:tmp_dir].nil?
 
 # Normalize file paths:
 config[:git_dir] = File.expand_path config[:git_dir]
@@ -58,33 +59,6 @@ require 'salesforcedeploytool'
 
 program :version, SalesforceDeployTool::VERSION
 program :description, 'A cli tool to help manage and deploy salesforce sandboxes with git'
-
-command :init do |c|
-  c.syntax = 'sf init [options]'
-  c.summary = 'Initialize salesforce sandbox from git'
-  c.description = "Clone the #{config[:git_repo]} to #{config[:git_dir]}"
-  c.example 'usage', 'sf init'
-  c.option "--sandbox NAME", "-s NAME", "use 'prod' to deploy production or sandbox name"
-  c.action do |args, options|
-
-    # short flag mapping
-    options.sandbox = options.s if options.s
-
-    # Parameter validation:
-    if options.sandbox.nil? and sandbox.nil?
-      puts "error: please specify sandbox using --sandbox or sf sandbox"
-      exit 1
-    end
-    config[:sandbox] = options.sandbox || sandbox
-
-    # Initialize
-    sfdt = SalesforceDeployTool::App.new config
-
-    # Clone
-    sfdt.clone
-
-  end
-end
 
 command :pull do |c|
   c.syntax = 'sf pull'
@@ -152,7 +126,7 @@ command :push do |c|
     sfdt = SalesforceDeployTool::App.new config.clone
 
     # Remove destructive change if there is one
-    DESTRUCTIVE_CHANGE_FILE = File.join(config[:git_dir],'src','destructiveChanges.xml')
+    DESTRUCTIVE_CHANGE_FILE = File.join(config[:git_dir],config[:buildxml_dir],'src','destructiveChanges.xml')
     FileUtils.rm DESTRUCTIVE_CHANGE_FILE if File.exists? DESTRUCTIVE_CHANGE_FILE
 
     if ! options.append
@@ -168,8 +142,8 @@ command :push do |c|
       # Create destructiveChanges.xml
       puts "INFO: Creating destructive changes xml"
       dc_gen = Dcgen::App.new
-      dc_gen.master = File.join(config[:git_dir],'src')
-      dc_gen.destination = File.join(config[:tmp_dir],'src')
+      dc_gen.master = File.join(config[:git_dir],config[:buildxml_dir],'src')
+      dc_gen.destination = File.join(config[:tmp_dir],config[:buildxml_dir],'src')
       dc_gen.output = DESTRUCTIVE_CHANGE_FILE
       dc_gen.exclude = options.exclude.split(',') unless options.exclude.nil?
       dc_gen.verbose = false if not options.debug
@@ -255,9 +229,18 @@ command :config do |c|
 
     config[:username] = config_new[:username]
     config[:password] = config_new[:password]
+    config[:sandbox] = sandbox
+
+    pp config
 
     File.open(File.expand_path(SANDBOX_CONFIG_FILE),'w').write sandbox
     File.open(File.expand_path(CONFIG_FILE),'w').write config_new.to_yaml
+
+    # Initialize
+    sfdt = SalesforceDeployTool::App.new config
+
+    # Clone
+    sfdt.clone
 
   end
 end

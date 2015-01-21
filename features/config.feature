@@ -1,10 +1,10 @@
-Feature: Interactive process control
+@config
+Feature: Configure the user credentials interactively
 
-  In order to test interactive command line applications
-  As a developer using Cucumber
-  I want to use the interactive session steps
+  In order to use sf
+  As a user using 
+  I want to be able to configure my credentials interactively
 
-  @posix
   Scenario: Running sf config it has to interactively setup my environment
     When I run `sf config` interactively
     And I type my salesforce production_username

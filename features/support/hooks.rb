@@ -5,6 +5,10 @@ When /^I type my salesforce (.*)$/ do |input|
   type(config[input.to_sym])
 end
 
+When /^I delete the repository directory/ do
+  FileUtils.rm_rf File.join 'tmp', 'aruba', ENV['SFDT_GIT_DIR']
+end
+
 When /^I watch "(.+)" for changes and copy to "(.+)"$/ do |file,dest|
   file = File.join('tmp','aruba',file)
   dest = File.join('tmp','aruba',dest)

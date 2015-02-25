@@ -24,7 +24,7 @@ module SalesforceDeployTool
       @commit_hash_pattern = config[:commit_hash_pattern]
       @buildxml_dir = config[:buildxml_dir]
       @username = @sandbox == 'prod' ? @username : @username + '.' + @sandbox 
-      @server_url = @sandbox == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com'
+      @server_url = config[:salesforce_url]
 
       # Defaults
       @debug ||= config[:debug]

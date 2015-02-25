@@ -122,18 +122,37 @@ Feature: Push code to salesforce
     ^INFO: Deploying code to env_a:.*OK$
     """
 
-  @new
-  Scenario: Push code to a sandbox excluding files
-    Given I set the environment variables to:
-      | variable                  | value                                                   |
-      | SFDT_DEPLOY_IGNORE_FILES  | src/layouts/test.layout,src/layouts/another_test.layout |
-    When I run `sf push`
-    #TODO: Then the files listed in SFDT_DEPLOY_IGNORE_FILES should be ignored by sf when deploying 
-    Then the exit status should be 0
+  Scenario: Push code to a sandbox with the repo not being cloned it should point the user to run sf config
+    When I delete the repository directory
+    And I run `sf push -d`
+    Then the exit status should be 1
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
-    ^INFO: Creating destructive changes xml$
-    ^INFO: Deploying code to env_a:.*OK$
+    ^ERROR: The environment is not properly configured, please run sf config to clone the repo and setup the credentials$
     """
 
+  @new
+  Scenario: Push code to a sandbox specifying a different URL
+    Given I set the environment variables to:
+      | variable             | value                                                   |
+      | SFDT_SALESFORCE_URL  | https://invalid_url.salesforce.com |
+    When I run `sf push -d`
+    Then the exit status should be 1
+    And the output should match:
+    """
+    .*Failed to login: Failed to send request to https://invalid_url.salesforce.com.*
+    """
+
+#  Scenario: Push code to a sandbox excluding files
+#    Given I set the environment variables to:
+#      | variable                  | value                                                   |
+#      | SFDT_DEPLOY_IGNORE_FILES  | src/layouts/test.layout,src/layouts/another_test.layout |
+#    When I run `sf push`
+#    #TODO: Then the files listed in SFDT_DEPLOY_IGNORE_FILES should be ignored by sf when deploying 
+#    Then the exit status should be 0
+#    And the output should match:
+#    """
+#    ^INFO: Pulling changes from env_a to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
+#    ^INFO: Creating destructive changes xml$
+#    ^INFO: Deploying code to env_a:.*OK$
+#    """

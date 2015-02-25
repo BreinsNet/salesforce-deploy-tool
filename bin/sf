@@ -38,19 +38,28 @@ config[:username]              =  ENV["SFDT_USERNAME"]              ||  config[:
 config[:password]              =  ENV["SFDT_PASSWORD"]              ||  config[:password]
 config[:deploy_ignore_files]   =  ENV["SFDT_DEPLOY_IGNORE_FILES"].nil? ? config[:deploy_ignore_files] : ENV["SFDT_DEPLOY_IGNORE_FILES"].split(',')
 
+# The salesforce URL, first from environment varialbes, second from config file , thierd defaults:
+config[:salesforce_url] = ENV["SFDT_SALESFORCE_URL"] || config[:salesforce_url] ||(  @sandbox == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com' )
+
 # Default values
 config[:buildxml_dir] = ENV["SFDT_BUILDXML_DIR"] || config[:buildxml_dir] || ''
 
 # Minimal config validation
 abort "Config error: git_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_GIT_DIR" if config[:git_dir].nil?
 abort "Config error: tmp_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_TMP_DIR" if config[:tmp_dir].nil?
+abort "Config error: username not found in #{GLOBAL_CONFIG_FILE} or through SFDT_USERNAME" if config[:username].nil?
+abort "Config error: password not found in #{GLOBAL_CONFIG_FILE} or through SFDT_PASSWORD" if config[:password].nil?
+
+# If the repository is not cloned then fail:
+if !File.exists?(config[:git_dir]) && ARGV[0] != 'config'
+  abort "ERROR: The environment is not properly configured, please run sf config to clone the repo and setup the credentials"
+end
 
 # Normalize file paths:
 config[:git_dir] = File.expand_path config[:git_dir]
 config[:tmp_dir] = File.expand_path config[:tmp_dir]
 
 # Read sandbox environment
-
 begin
   sandbox = File.open(File.expand_path(SANDBOX_CONFIG_FILE)).read
 rescue

@@ -17,6 +17,11 @@ Before do
   end
 end
 
+# Remove current configurations only once
+Before '@config' do
+  FileUtils.rm_rf File.join(File.expand_path('~/'),'.sf')
+end
+
 # Before push and pull clone the repository
 Before '@push,@pull' do 
   uri = ENV['SFDT_GIT_REPO']

@@ -47,8 +47,8 @@ config[:buildxml_dir] = ENV["SFDT_BUILDXML_DIR"] || config[:buildxml_dir] || ''
 # Minimal config validation
 abort "Config error: git_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_GIT_DIR" if config[:git_dir].nil?
 abort "Config error: tmp_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_TMP_DIR" if config[:tmp_dir].nil?
-abort "Config error: username not found in #{GLOBAL_CONFIG_FILE} or through SFDT_USERNAME" if config[:username].nil?
-abort "Config error: password not found in #{GLOBAL_CONFIG_FILE} or through SFDT_PASSWORD" if config[:password].nil?
+abort "Config error: username not found in #{GLOBAL_CONFIG_FILE} or through SFDT_USERNAME" if config[:username].nil? && ARGV[0] != 'config'
+abort "Config error: password not found in #{GLOBAL_CONFIG_FILE} or through SFDT_PASSWORD" if config[:password].nil? && ARGV[0] != 'config'
 
 # If the repository is not cloned then fail:
 if !File.exists?(config[:git_dir]) && ARGV[0] != 'config'

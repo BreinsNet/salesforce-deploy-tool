@@ -76,17 +76,15 @@ module SalesforceDeployTool
 
     end
 
-    def clean_git_dir message = nil
+    def clean_git_dir
 
-      print message
       Dir[File.join(@git_dir,'src','*')].each do |dir|
         FileUtils.rm_rf dir unless dir =~ /.*package.xml$/
       end
-      puts "OK" unless message.nil?
 
     end
 
-    def pull message = nil
+    def pull
 
       env_vars = ""
       env_vars += " SF_USERNAME=" + @username
@@ -102,13 +100,11 @@ module SalesforceDeployTool
         :stderr => @debug,
         :stdout => @debug,
         :spinner => ! @debug,
-        :message => message,
         :okmsg => "OK",
         :failmsg => "FAILED",
       }
 
       if @debug
-        exec_options[:message] += "\n\n"
         exec_options[:okmsg] = nil
         exec_options[:failmsg] = nil
       end
@@ -149,10 +145,6 @@ module SalesforceDeployTool
         exec_options[:okmsg]    =   nil
         exec_options[:failmsg]  =   nil
       end
-
-      # Deploy code
-      exec_options[:message] = @test ?  "INFO: Deploying and Testing code to #{@sandbox}:  " : "INFO: Deploying code to #{@sandbox}:  "
-      exec_options[:message]  +=  "\n\n" if @debug
 
       cmd = @test ? " ant deployAndTestCode" : " ant deployCode"
       full_cmd = env_vars + cmd

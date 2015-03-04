@@ -10,7 +10,7 @@ Feature: Push code to salesforce
     And a file named "dcxml_location/destructiveChanges.xml" should exist
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
+    ^INFO: Pulling changes from env_a using url https:\/\/test.salesforce.com to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
     ^INFO: Creating destructive changes xml$
     ^INFO: Deploying code to env_a:.*OK$
     """
@@ -21,9 +21,21 @@ Feature: Push code to salesforce
     And a file named "dcxml_location/destructiveChanges.xml" should exist
     And the output should match:
     """
-    ^INFO: Pulling changes from env_b to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
+    ^INFO: Pulling changes from env_b using url https://test.salesforce.com to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
     ^INFO: Creating destructive changes xml$
     ^INFO: Deploying code to env_b:.*OK$
+    """
+
+  Scenario: Push code to production should use the url login.salesorce.com
+    Given I set the environment variables to:
+      | variable      | value                |
+      | SFDT_USERNAME | invalid_user         |
+      | SFDT_PASSWORD | invalid_pass         |
+    When I run `sf push -s prod`
+    Then the exit status should be 1
+    And the output should match:
+    """
+    ^INFO: Pulling changes from prod using url https://login.salesforce.com to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*$
     """
 
   Scenario: Push code to a sandbox with debug information
@@ -44,7 +56,7 @@ Feature: Push code to salesforce
     And a file named "dcxml_location/destructiveChanges.xml" should exist
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
+    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
     ^INFO: Creating destructive changes xml$
     ^INFO: Deploying and Testing code to env_a:.*OK$
     """
@@ -73,6 +85,7 @@ Feature: Push code to salesforce
     ^INFO: Deploying and Testing code to env_a:.*OK$
     """
 
+  @test
   Scenario: Push code to a sandbox in append mode and run all tests and output debug information
     When I run `sf push -a -T -d`
     Then the exit status should be 0
@@ -100,7 +113,7 @@ Feature: Push code to salesforce
     And the file "sfdt_git_dir/version_file" should contain "build_number_pattern"
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
+    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
     ^INFO: Creating destructive changes xml$
     ^INFO: Deploying code to env_a:.*OK$
     """
@@ -117,7 +130,7 @@ Feature: Push code to salesforce
     And the file "sfdt_git_dir/version_file" should contain "commit_hash_pattern"
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
+    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
     ^INFO: Creating destructive changes xml$
     ^INFO: Deploying code to env_a:.*OK$
     """
@@ -131,7 +144,6 @@ Feature: Push code to salesforce
     ^ERROR: The environment is not properly configured, please run sf config to clone the repo and setup the credentials$
     """
 
-  @new
   Scenario: Push code to a sandbox specifying a different URL
     Given I set the environment variables to:
       | variable             | value                                                   |
@@ -143,16 +155,4 @@ Feature: Push code to salesforce
     .*Failed to login: Failed to send request to https://invalid_url.salesforce.com.*
     """
 
-#  Scenario: Push code to a sandbox excluding files
-#    Given I set the environment variables to:
-#      | variable                  | value                                                   |
-#      | SFDT_DEPLOY_IGNORE_FILES  | src/layouts/test.layout,src/layouts/another_test.layout |
-#    When I run `sf push`
-#    #TODO: Then the files listed in SFDT_DEPLOY_IGNORE_FILES should be ignored by sf when deploying 
-#    Then the exit status should be 0
-#    And the output should match:
-#    """
-#    ^INFO: Pulling changes from env_a to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
-#    ^INFO: Creating destructive changes xml$
-#    ^INFO: Deploying code to env_a:.*OK$
-#    """
+    # TODO: Scenario: Push code to a sandbox excluding files

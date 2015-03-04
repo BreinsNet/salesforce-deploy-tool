@@ -27,6 +27,13 @@ config = {}
   end
 end
 
+# Read sandbox environment
+begin
+  sandbox = File.open(File.expand_path(SANDBOX_CONFIG_FILE)).read
+rescue
+  sandbox = nil
+end
+
 # Grab variables from env if not in the config files
 config[:git_dir]               =  ENV["SFDT_GIT_DIR"]               ||  config[:git_dir]
 config[:tmp_dir]               =  ENV["SFDT_TMP_DIR"]               ||  config[:tmp_dir]
@@ -36,10 +43,8 @@ config[:commit_hash_pattern]   =  ENV["SFDT_COMMIT_HASH_PATTERN"]   ||  config[:
 config[:git_repo]              =  ENV["SFDT_GIT_REPO"]              ||  config[:git_repo]
 config[:username]              =  ENV["SFDT_USERNAME"]              ||  config[:username]
 config[:password]              =  ENV["SFDT_PASSWORD"]              ||  config[:password]
+config[:salesforce_url]        =  ENV["SFDT_SALESFORCE_URL"]        ||  config[:salesforce_url] 
 config[:deploy_ignore_files]   =  ENV["SFDT_DEPLOY_IGNORE_FILES"].nil? ? config[:deploy_ignore_files] : ENV["SFDT_DEPLOY_IGNORE_FILES"].split(',')
-
-# The salesforce URL, first from environment varialbes, second from config file , thierd defaults:
-config[:salesforce_url] = ENV["SFDT_SALESFORCE_URL"] || config[:salesforce_url] ||(  @sandbox == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com' )
 
 # Default values
 config[:buildxml_dir] = ENV["SFDT_BUILDXML_DIR"] || config[:buildxml_dir] || ''
@@ -51,20 +56,13 @@ abort "Config error: username not found in #{GLOBAL_CONFIG_FILE} or through SFDT
 abort "Config error: password not found in #{GLOBAL_CONFIG_FILE} or through SFDT_PASSWORD" if config[:password].nil? && ARGV[0] != 'config'
 
 # If the repository is not cloned then fail:
-if !File.exists?(config[:git_dir]) && ARGV[0] != 'config'
+if !File.exists?(config[:git_dir]) && ['pull','push'].include?(ARGV[0])
   abort "ERROR: The environment is not properly configured, please run sf config to clone the repo and setup the credentials"
 end
 
 # Normalize file paths:
 config[:git_dir] = File.expand_path config[:git_dir]
 config[:tmp_dir] = File.expand_path config[:tmp_dir]
-
-# Read sandbox environment
-begin
-  sandbox = File.open(File.expand_path(SANDBOX_CONFIG_FILE)).read
-rescue
-  sandbox = nil
-end
 
 require 'salesforcedeploytool'
 
@@ -92,6 +90,12 @@ command :pull do |c|
     config[:sandbox] = options.sandbox || sandbox
     config[:debug] = options.debug.nil? ? false : true
 
+    # The salesforce URL
+    config[:salesforce_url] = 
+      ENV["SFDT_SALESFORCE_URL"] ||                                                                   # First from environment variables
+      config[:salesforce_url]    ||                                                                   # Second from the configuration files
+      ( config[:sandbox] == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com' ) # If not defined anywhere, use defaults
+
     # Initialize
     sfdt = SalesforceDeployTool::App.new config
 
@@ -99,7 +103,9 @@ command :pull do |c|
     sfdt.clean_git_dir unless options.append
 
     # Pull the changes
-    sfdt.pull "INFO: Pulling changes from #{config[:sandbox]}  "
+    print "INFO: Pulling changes from #{config[:sandbox]} using url #{config[:salesforce_url]} "
+    print "\n\n" if options.debug
+    sfdt.pull
     sfdt.clean_version
 
   end
@@ -133,6 +139,12 @@ command :push do |c|
     config[:test] = options.test.nil? ? false : true
     config[:debug] = options.debug.nil? ? false : true
 
+    # The salesforce URL
+    config[:salesforce_url] = 
+      ENV["SFDT_SALESFORCE_URL"] ||                                                                   # First from environment variables
+      config[:salesforce_url]    ||                                                                   # Second from the configuration files
+      ( config[:sandbox] == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com' ) # If not defined anywhere, use defaults
+
     # Initialize
     sfdt = SalesforceDeployTool::App.new config.clone
 
@@ -147,7 +159,8 @@ command :push do |c|
       FileUtils.rm_rf config_tmp[:git_dir] if File.exists? config_tmp[:git_dir]
       FileUtils.cp_r config[:git_dir],config_tmp[:git_dir]
       sfdt_tmp = SalesforceDeployTool::App.new config_tmp
-      sfdt_tmp.pull "INFO: Pulling changes from #{config[:sandbox]} to temporary directory #{config[:tmp_dir]} to generate destructiveChanges.xml  "
+      print "INFO: Pulling changes from #{config[:sandbox]} using url #{config[:salesforce_url]} to temporary directory #{config[:tmp_dir]} to generate destructiveChanges.xml  "
+      sfdt_tmp.pull
 
       # Create destructiveChanges.xml
       puts "INFO: Creating destructive changes xml"
@@ -171,6 +184,7 @@ command :push do |c|
       sfdt.test = options.test.nil? ? false : true
 
       # Push
+      print(options.test.nil? ? "INFO: Deploying code to #{config[:sandbox]}:   ": "INFO: Deploying and Testing code to #{config[:sandbox]}:  \n\n")
       sfdt.push
     ensure
       sfdt.clean_version

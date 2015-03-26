@@ -13,4 +13,4 @@ require "stringio"
 require "salesforcedeploytool/version"
 require "salesforcedeploytool/functions"
 require "salesforcedeploytool/app"
-
+require "erb"

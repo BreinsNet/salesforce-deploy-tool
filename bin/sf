@@ -2,6 +2,7 @@
 require 'pp'
 require 'yaml'
 require 'fileutils'
+require 'tmpdir'
 
 # Disable stdout buffer
 STDOUT.sync = true
@@ -34,35 +35,44 @@ rescue
   sandbox = nil
 end
 
-# Grab variables from env if not in the config files
-config[:git_dir]               =  ENV["SFDT_GIT_DIR"]               ||  config[:git_dir]
-config[:tmp_dir]               =  ENV["SFDT_TMP_DIR"]               ||  config[:tmp_dir]
-config[:version_file]          =  ENV["SFDT_VERSION_FILE"]          ||  config[:version_file]
-config[:build_number_pattern]  =  ENV["SFDT_BUILD_NUMBER_PATTERN"]  ||  config[:build_number_pattern]
-config[:commit_hash_pattern]   =  ENV["SFDT_COMMIT_HASH_PATTERN"]   ||  config[:commit_hash_pattern]
+# Configuration variables firrst from ENV , if not config file
+
+# Git configs:
 config[:git_repo]              =  ENV["SFDT_GIT_REPO"]              ||  config[:git_repo]
+config[:git_dir]               =  ENV["SFDT_GIT_DIR"]               ||  config[:git_dir]
+config[:src_dir]               =  ENV["SFDT_SRC_DIR"]               ||  config[:src_dir]
+
+# Salesforce credential configs
 config[:username]              =  ENV["SFDT_USERNAME"]              ||  config[:username]
 config[:password]              =  ENV["SFDT_PASSWORD"]              ||  config[:password]
 config[:salesforce_url]        =  ENV["SFDT_SALESFORCE_URL"]        ||  config[:salesforce_url] 
+
+# Project configs
+config[:version_file]          =  ENV["SFDT_VERSION_FILE"]          ||  config[:version_file]
+config[:build_number_pattern]  =  ENV["SFDT_BUILD_NUMBER_PATTERN"]  ||  config[:build_number_pattern]
+config[:commit_hash_pattern]   =  ENV["SFDT_COMMIT_HASH_PATTERN"]   ||  config[:commit_hash_pattern]
 config[:deploy_ignore_files]   =  ENV["SFDT_DEPLOY_IGNORE_FILES"].nil? ? config[:deploy_ignore_files] : ENV["SFDT_DEPLOY_IGNORE_FILES"].split(',')
 
-# Default values
-config[:buildxml_dir] = ENV["SFDT_BUILDXML_DIR"] || config[:buildxml_dir] || ''
-
 # Minimal config validation
+abort "Config error: src_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_SRC_DIR" if config[:src_dir].nil?
 abort "Config error: git_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_GIT_DIR" if config[:git_dir].nil?
-abort "Config error: tmp_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_TMP_DIR" if config[:tmp_dir].nil?
+abort "Config error: git_repo not found in #{GLOBAL_CONFIG_FILE} or through SFDT_GIT_DIR" if config[:git_repo].nil?
 abort "Config error: username not found in #{GLOBAL_CONFIG_FILE} or through SFDT_USERNAME" if config[:username].nil? && ARGV[0] != 'config'
 abort "Config error: password not found in #{GLOBAL_CONFIG_FILE} or through SFDT_PASSWORD" if config[:password].nil? && ARGV[0] != 'config'
 
-# If the repository is not cloned then fail:
-if !File.exists?(config[:git_dir]) && ['pull','push'].include?(ARGV[0])
-  abort "ERROR: The environment is not properly configured, please run sf config to clone the repo and setup the credentials"
-end
-
 # Normalize file paths:
 config[:git_dir] = File.expand_path config[:git_dir]
-config[:tmp_dir] = File.expand_path config[:tmp_dir]
+full_src_dir = File.join(config[:git_dir],config[:src_dir])
+
+# Create a temporary directory
+config[:tmp_dir] = tmp_dir = Dir.mktmpdir 'sfdt-'
+Dir.chdir tmp_dir
+
+# If the repository is not cloned then fail:
+if !File.exists?(full_src_dir) && ['pull','push'].include?(ARGV[0]) && !File.exists?(File.join(full_src_dir,"package.xml"))
+  abort "ERROR: The source directory #{full_src_dir} is not a valid salesforce source directory"
+end
+
 
 require 'salesforcedeploytool'
 
@@ -103,7 +113,7 @@ command :pull do |c|
     sfdt.clean_git_dir unless options.append
 
     # Pull the changes
-    print "INFO: Pulling changes from #{config[:sandbox]} using url #{config[:salesforce_url]} "
+    print "INFO: Pulling changes from #{config[:sandbox]} using url #{config[:salesforce_url]}  "
     print "\n\n" if options.debug
     sfdt.pull
     sfdt.clean_version
@@ -146,27 +156,27 @@ command :push do |c|
       ( config[:sandbox] == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com' ) # If not defined anywhere, use defaults
 
     # Initialize
-    sfdt = SalesforceDeployTool::App.new config.clone
+    sfdt = SalesforceDeployTool::App.new config
 
     # Remove destructive change if there is one
-    DESTRUCTIVE_CHANGE_FILE = File.join(config[:git_dir],config[:buildxml_dir],'src','destructiveChanges.xml')
+    DESTRUCTIVE_CHANGE_FILE = File.join(full_src_dir,'destructiveChanges.xml')
     FileUtils.rm DESTRUCTIVE_CHANGE_FILE if File.exists? DESTRUCTIVE_CHANGE_FILE
 
     if ! options.append
       # Pull changes from sandbox to temporary directory:
       config_tmp = config.clone
-      config_tmp[:git_dir] = config_tmp[:tmp_dir]
-      FileUtils.rm_rf config_tmp[:git_dir] if File.exists? config_tmp[:git_dir]
+      config_tmp[:git_dir] = File.join(tmp_dir,'repo_copy')
       FileUtils.cp_r config[:git_dir],config_tmp[:git_dir]
       sfdt_tmp = SalesforceDeployTool::App.new config_tmp
-      print "INFO: Pulling changes from #{config[:sandbox]} using url #{config[:salesforce_url]} to temporary directory #{config[:tmp_dir]} to generate destructiveChanges.xml  "
+      print "INFO: Pulling changes from #{config[:sandbox]} using url #{config[:salesforce_url]} to temporary directory to generate destructiveChanges.xml  "
+      print( options.debug.nil? ? "" : "\n\n" )
       sfdt_tmp.pull
 
       # Create destructiveChanges.xml
       puts "INFO: Creating destructive changes xml"
       dc_gen = Dcgen::App.new
-      dc_gen.master = File.join(config[:git_dir],config[:buildxml_dir],'src')
-      dc_gen.destination = File.join(config[:tmp_dir],config[:buildxml_dir],'src')
+      dc_gen.master = full_src_dir
+      dc_gen.destination = File.join(config_tmp[:git_dir],config_tmp[:src_dir])
       dc_gen.output = DESTRUCTIVE_CHANGE_FILE
       dc_gen.exclude = options.exclude.split(',') unless options.exclude.nil?
       dc_gen.verbose = false if not options.debug
@@ -184,7 +194,8 @@ command :push do |c|
       sfdt.test = options.test.nil? ? false : true
 
       # Push
-      print(options.test.nil? ? "INFO: Deploying code to #{config[:sandbox]}:   ": "INFO: Deploying and Testing code to #{config[:sandbox]}:  \n\n")
+      print( options.test.nil? ? "INFO: Deploying code to #{config[:sandbox]}:   ": "INFO: Deploying and Testing code to #{config[:sandbox]}:  " )
+      print( options.debug.nil? ? "" : "\n\n" )
       sfdt.push
     ensure
       sfdt.clean_version

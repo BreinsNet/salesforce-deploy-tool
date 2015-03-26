@@ -1,0 +1,45 @@
+<project name="Sample usage of Salesforce Ant tasks" default="test" basedir="." xmlns:sf="antlib:com.salesforce">
+
+    <property environment="env"/>
+
+    <taskdef resource="com/salesforce/antlib.xml" uri="antlib:com.salesforce">
+        <classpath>
+            <pathelement location="../ant-salesforce.jar" />
+        </classpath>
+    </taskdef>
+
+    <target name="deployCode">
+      <sf:deploy 
+        username="${env.SF_USERNAME}" 
+        password="${env.SF_PASSWORD}" 
+        serverurl="${env.SF_SERVERURL}" 
+        deployRoot="${env.SF_SRC_DIR}" 
+        maxPoll="200" 
+        rollbackOnError="true" >
+      </sf:deploy>
+    </target>
+
+    <target name="deployAndTestCode">
+      <sf:deploy 
+        username="${env.SF_USERNAME}" 
+        password="${env.SF_PASSWORD}" 
+        serverurl="${env.SF_SERVERURL}" 
+        deployRoot="${env.SF_SRC_DIR}" 
+        maxPoll="200" 
+        runAllTests="true" 
+        rollbackOnError="true" >
+      </sf:deploy>
+    </target>
+
+    <target name="retrieveCode">
+      <sf:retrieve 
+        username="${env.SF_USERNAME}" 
+        password="${env.SF_PASSWORD}" 
+        serverurl="${env.SF_SERVERURL}" 
+        retrieveTarget="${env.SF_SRC_DIR}" 
+        unpackaged="${env.SF_SRC_DIR}/package.xml"
+        maxPoll="200" 
+      />
+    </target>
+
+</project>

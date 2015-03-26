@@ -10,19 +10,18 @@ module SalesforceDeployTool
       # Config file validation:
       ( @git_repo = config[:git_repo] ).nil? and raise "Invalid Config: git_repo not found"
       ( @git_dir = config[:git_dir] ).nil? and raise "Invalid Config: git_dir not found"
+      ( @src_dir = config[:src_dir] ).nil? and raise "Invalid Config: src_dir not found"
       ( @sandbox = config[:sandbox] ).nil? and raise "Invalid Config: sandbox not found"
-      ( @password = config[:password] ).nil? and raise "Invalid Config: password not found, please run `sf config`"
       ( @username = config[:username] ).nil? and raise "Invalid Config: username not found, please run `sf config`"
       ( @password = config[:password] ).nil? and raise "Invalid Config: password not found, please run `sf config`"
 
       # Parameter Normalization
-      @git_dir = File.expand_path config[:git_dir]
-      @tmp_dir = File.expand_path config[:tmp_dir]
-      @version_file = File.join(@git_dir,config[:version_file]) if !config[:version_file].nil?
-      @deploy_ignore_files = config[:deploy_ignore_files].map {|f| File.expand_path File.join(config[:git_dir],f)} if ! config[:deploy_ignore_files].nil?
+      @git_dir = File.expand_path(@git_dir)
+      @full_src_dir = File.join(@git_dir,@src_dir)
+      @version_file = File.join(@full_src_dir,config[:version_file]) if !config[:version_file].nil?
+      @deploy_ignore_files = config[:deploy_ignore_files].map {|f| File.expand_path(File.join(@full_src_dir,f)) } if !config[:deploy_ignore_files].nil?
       @build_number_pattern = config[:build_number_pattern]
       @commit_hash_pattern = config[:commit_hash_pattern]
-      @buildxml_dir = config[:buildxml_dir]
       @username = @sandbox == 'prod' ? @username : @username + '.' + @sandbox 
       @server_url = config[:salesforce_url]
 
@@ -31,10 +30,15 @@ module SalesforceDeployTool
       @test ||= config[:test]
       @build_number ||= 'N/A'
       @version_file ||= false
-      @buildxml_dir ||= ''
       @build_number_pattern ||= false
       @commit_hash_pattern ||= false
       @deploy_ignore_files ||= []
+
+      # Template dir
+      #
+     
+      buildxml_path = File.join($:.select {|x| x.match /salesforce-deploy-tool/ },'..','tpl','build.xml.erb')
+      @buildxml_erb = File.read(buildxml_path)
 
     end
 
@@ -86,15 +90,17 @@ module SalesforceDeployTool
 
     def pull
 
+      renderer = ERB.new(@buildxml_erb)
+      File.open('build.xml','w') {|f| f.write renderer.result }
+
       env_vars = ""
+      env_vars += " SF_SRC_DIR=" + @full_src_dir
       env_vars += " SF_USERNAME=" + @username
       env_vars += " SF_PASSWORD=" + @password
       env_vars += " SF_SERVERURL=" + @server_url
       cmd = " ant retrieveCode"
 
       full_cmd = env_vars + cmd
-
-      Dir.chdir File.join(@git_dir,@buildxml_dir)
 
       exec_options = {
         :stderr => @debug,
@@ -123,11 +129,12 @@ module SalesforceDeployTool
 
     def push
 
-      # Working dir
-      Dir.chdir File.join(@git_dir,@buildxml_dir)
+      renderer = ERB.new(@buildxml_erb)
+      File.open('build.xml','w') {|f| f.write renderer.result }
 
       # Set env variables to run ant
       env_vars = ""
+      env_vars += " SF_SRC_DIR=" + @full_src_dir
       env_vars += " SF_USERNAME=" + @username
       env_vars += " SF_PASSWORD=" + @password
       env_vars += " SF_SERVERURL=" + @server_url

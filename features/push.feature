@@ -10,7 +10,7 @@ Feature: Push code to salesforce
     And a file named "dcxml_location/destructiveChanges.xml" should exist
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a using url https:\/\/test.salesforce.com to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
+    ^INFO: Pulling changes from env_a using url https:\/\/test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
     ^INFO: Creating destructive changes xml$
     ^INFO: Deploying code to env_a:.*OK$
     """
@@ -21,7 +21,7 @@ Feature: Push code to salesforce
     And a file named "dcxml_location/destructiveChanges.xml" should exist
     And the output should match:
     """
-    ^INFO: Pulling changes from env_b using url https://test.salesforce.com to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
+    ^INFO: Pulling changes from env_b using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
     ^INFO: Creating destructive changes xml$
     ^INFO: Deploying code to env_b:.*OK$
     """
@@ -35,7 +35,7 @@ Feature: Push code to salesforce
     Then the exit status should be 1
     And the output should match:
     """
-    ^INFO: Pulling changes from prod using url https://login.salesforce.com to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*$
+    ^INFO: Pulling changes from prod using url https://login.salesforce.com to temporary directory to generate destructiveChanges.xml.*$
     """
 
   Scenario: Push code to a sandbox with debug information
@@ -56,7 +56,7 @@ Feature: Push code to salesforce
     And a file named "dcxml_location/destructiveChanges.xml" should exist
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
+    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
     ^INFO: Creating destructive changes xml$
     ^INFO: Deploying and Testing code to env_a:.*OK$
     """
@@ -85,7 +85,6 @@ Feature: Push code to salesforce
     ^INFO: Deploying and Testing code to env_a:.*OK$
     """
 
-  @test
   Scenario: Push code to a sandbox in append mode and run all tests and output debug information
     When I run `sf push -a -T -d`
     Then the exit status should be 0
@@ -106,14 +105,14 @@ Feature: Push code to salesforce
       | variable                  | value                |
       | SFDT_VERSION_FILE         | version_file         |
       | SFDT_BUILD_NUMBER_PATTERN | build_number_pattern |
-    When I watch "sfdt_git_dir/version_file" for changes and copy to "test_file"
+    When I watch "sfdt_git_dir/sfdt_src_dir/version_file" for changes and copy to "test_file"
     And I run `sf push --build_number 123456789`
     Then the exit status should be 0
     And the file "test_file" should contain "123456789"
-    And the file "sfdt_git_dir/version_file" should contain "build_number_pattern"
+    And the file "sfdt_git_dir/sfdt_src_dir/version_file" should contain "build_number_pattern"
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
+    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
     ^INFO: Creating destructive changes xml$
     ^INFO: Deploying code to env_a:.*OK$
     """
@@ -123,14 +122,14 @@ Feature: Push code to salesforce
       | variable                  | value                |
       | SFDT_VERSION_FILE         | version_file         |
       | SFDT_COMMIT_HASH_PATTERN  | commit_hash_pattern  |
-    When I watch "sfdt_git_dir/version_file" for changes and copy to "test_file"
+    When I watch "sfdt_git_dir/sfdt_src_dir/version_file" for changes and copy to "test_file"
     And I run `sf push`
     Then the exit status should be 0
     And the file "test_file" should not contain "commit_hash_pattern"
-    And the file "sfdt_git_dir/version_file" should contain "commit_hash_pattern"
+    And the file "sfdt_git_dir/sfdt_src_dir/version_file" should contain "commit_hash_pattern"
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory .*tmp_repo.* to generate destructiveChanges.xml.*OK$
+    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
     ^INFO: Creating destructive changes xml$
     ^INFO: Deploying code to env_a:.*OK$
     """
@@ -141,7 +140,7 @@ Feature: Push code to salesforce
     Then the exit status should be 1
     And the output should match:
     """
-    ^ERROR: The environment is not properly configured, please run sf config to clone the repo and setup the credentials$
+    ^ERROR: The source directory .* is not a valid salesforce source directory
     """
 
   Scenario: Push code to a sandbox specifying a different URL

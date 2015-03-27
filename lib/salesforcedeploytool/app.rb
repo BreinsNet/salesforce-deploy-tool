@@ -37,7 +37,7 @@ module SalesforceDeployTool
       # Template dir
       #
      
-      buildxml_path = File.join($:.select {|x| x.match /salesforce-deploy-tool/ },'..','tpl','build.xml.erb')
+      buildxml_path = File.join($:.select {|x| x.match(/salesforce-deploy-tool/) },'..','tpl','build.xml.erb')
       @buildxml_erb = File.read(buildxml_path)
 
     end
@@ -82,7 +82,7 @@ module SalesforceDeployTool
 
     def clean_git_dir
 
-      Dir[File.join(@git_dir,'src','*')].each do |dir|
+      Dir[File.join(full_src_dir,'*')].each do |dir|
         FileUtils.rm_rf dir unless dir =~ /.*package.xml$/
       end
 

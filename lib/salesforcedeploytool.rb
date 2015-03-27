@@ -1,11 +1,10 @@
 require "rubygems"
+require "commander"
 require 'pp'
 require 'yaml'
 require 'fileutils'
 require 'tmpdir'
 require "pathname"
-require "commander/import"
-require "commander"
 require "git"
 require "pp"
 require "colorize"

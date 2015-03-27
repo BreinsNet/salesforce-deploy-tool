@@ -61,7 +61,7 @@ abort "Config error: password not found in #{GLOBAL_CONFIG_FILE} or through SFDT
 config[:tmp_dir] = Dir.mktmpdir 'sfdt-'
 
 begin
-  SalesforceDeployTool::CLI.new.run config if $0 == __FILE__
+  SalesforceDeployTool::CLI.new.run config 
 rescue => e
   puts "ERROR: #{e}"
   exit 1

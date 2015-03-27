@@ -1,6 +1,11 @@
 require "rubygems"
+require 'pp'
+require 'yaml'
+require 'fileutils'
+require 'tmpdir'
 require "pathname"
 require "commander/import"
+require "commander"
 require "git"
 require "pp"
 require "colorize"
@@ -13,4 +18,5 @@ require "stringio"
 require "salesforcedeploytool/version"
 require "salesforcedeploytool/functions"
 require "salesforcedeploytool/app"
+require "salesforcedeploytool/cli"
 require "erb"

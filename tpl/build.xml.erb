@@ -26,6 +26,20 @@
         serverurl="${env.SF_SERVERURL}" 
         deployRoot="${env.SF_SRC_DIR}" 
         maxPoll="200" 
+        rollbackOnError="true" >
+<% @run_tests.each do |test| -%>
+      <runTest><%= test %></runTest>
+<% end -%>
+      </sf:deploy>
+    </target>
+
+    <target name="deployAndTestAllCode">
+      <sf:deploy 
+        username="${env.SF_USERNAME}" 
+        password="${env.SF_PASSWORD}" 
+        serverurl="${env.SF_SERVERURL}" 
+        deployRoot="${env.SF_SRC_DIR}" 
+        maxPoll="200" 
         runAllTests="true" 
         rollbackOnError="true" >
       </sf:deploy>
@@ -37,8 +51,8 @@
         password="${env.SF_PASSWORD}" 
         serverurl="${env.SF_SERVERURL}" 
         retrieveTarget="${env.SF_SRC_DIR}" 
-        unpackaged="${env.SF_SRC_DIR}/package.xml"
         maxPoll="200" 
+        unpackaged="${env.SF_SRC_DIR}/package.xml"
       />
     </target>
 

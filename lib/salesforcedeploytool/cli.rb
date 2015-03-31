@@ -74,24 +74,30 @@ module SalesforceDeployTool
         c.example 'description', "Push the code that is located into #{config[:git_dir]} into the active sandbox"
         c.option "--sandbox NAME", "-s NAME", "use 'prod' to deploy production or sandbox name"
         c.option "--debug", "Verbose output"
-        c.option "--test", "-T", "Deploy and test"
-        c.option "--exclude LIST", "-x LIST", "a CSV list of metadata to exclude when creating destructiveChange.xml"
+        c.option "--exclude CSV_LIST", "-x CSV_LIST", "a CSV list of metadata to exclude when creating destructiveChange.xml"
         c.option "--append", "Disable destructive change and do an append deploy"
         c.option "--build_number NUMBER","Record build number on version file"
+        c.option "--run-all-tests", "-T", "Deploy and test"
+        c.option "--run-tests CSV_LIST", "-r CSV_LIST", "a CSV list of individual classes to run tests"
         c.action do |args, options|
 
           # short flag mapping
-          options.test = true if options.T
+          options.run_all_tests = true if options.T
+          options.run_tests = options.r if options.r
           options.exclude = options.x if options.x
           options.sandbox = options.s if options.s
 
           # Parameter validation:
+
+          if options.run_all_tests and options.run_tests
+            puts "warning: --run-tests is ignored as --test has been declared "
+          end
+
           if options.sandbox.nil? and config[:sandbox].nil?
             puts "error: please specify the sandbox to pull from using --sandbox"
             exit 1
           end
           config[:sandbox] = options.sandbox if options.sandbox
-          config[:test] = options.test.nil? ? false : true
           config[:debug] = options.debug.nil? ? false : true
 
           # The salesforce URL
@@ -136,10 +142,11 @@ module SalesforceDeployTool
             sfdt.set_version
 
             # Enable test if option enabled
-            sfdt.test = options.test.nil? ? false : true
+            sfdt.run_all_tests = options.run_all_tests.nil? ? false : true
+            sfdt.run_tests = options.run_tests.split(',') unless options.run_tests.nil?
 
             # Push
-            print( options.test.nil? ? "INFO: Deploying code to #{config[:sandbox]}:   ": "INFO: Deploying and Testing code to #{config[:sandbox]}:  " )
+            print( options.run_all_tests.nil? && options.run_tests.nil? ? "INFO: Deploying code to #{config[:sandbox]}:   ": "INFO: Deploying and Testing code to #{config[:sandbox]}:  " )
             print( options.debug.nil? ? "" : "\n\n" )
             sfdt.push
           ensure

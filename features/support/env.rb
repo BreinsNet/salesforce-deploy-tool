@@ -3,7 +3,7 @@ require 'filewatcher'
 require 'git'
 
 # Load configuratiohn
-config = YAML::load(File.open('config.yaml'))
+config = YAML::load(File.open('cucumber-config.yaml'))
 
 # Cucumber / aruba configuration parameters
 Before do

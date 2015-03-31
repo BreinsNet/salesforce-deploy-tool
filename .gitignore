@@ -24,4 +24,4 @@ mkmf.log
 test_data
 credentials.yaml
 envvars
-config.yaml
+cucumber-config.yaml

@@ -3,7 +3,7 @@ module SalesforceDeployTool
   class App
 
     attr_accessor :build_number
-    attr_accessor :test
+    attr_accessor :run_all_tests
 
     def initialize config
      
@@ -26,8 +26,8 @@ module SalesforceDeployTool
       @server_url = config[:salesforce_url]
 
       # Defaults
+      @run_tests = []
       @debug ||= config[:debug]
-      @test ||= config[:test]
       @build_number ||= 'N/A'
       @version_file ||= false
       @build_number_pattern ||= false
@@ -35,11 +35,17 @@ module SalesforceDeployTool
       @deploy_ignore_files ||= []
 
       # Template dir
-      #
-     
       buildxml_path = File.join($:.select {|x| x.match(/salesforce-deploy-tool/) },'..','tpl','build.xml.erb')
       @buildxml_erb = File.read(buildxml_path)
 
+
+    end
+
+    # @run_tests can't be nil
+    def run_tests= value
+      value ||= []
+      raise "ArgumentError" if value.class != Array
+      @run_tests = value 
     end
 
     def set_version
@@ -82,7 +88,7 @@ module SalesforceDeployTool
 
     def clean_git_dir
 
-      Dir[File.join(full_src_dir,'*')].each do |dir|
+      Dir[File.join(@full_src_dir,'*')].each do |dir|
         FileUtils.rm_rf dir unless dir =~ /.*package.xml$/
       end
 
@@ -90,8 +96,11 @@ module SalesforceDeployTool
 
     def pull
 
-      renderer = ERB.new(@buildxml_erb)
-      File.open('build.xml','w') {|f| f.write renderer.result }
+      # Parameter validation
+      raise "package.xml not found under #{@full_src_dir}" if !File.exists? File.join(@full_src_dir,'package.xml')
+
+      renderer = ERB.new(@buildxml_erb, nil,'%<>-')
+      File.open('build.xml','w') {|f| f.write renderer.result(binding) }
 
       env_vars = ""
       env_vars += " SF_SRC_DIR=" + @full_src_dir
@@ -129,8 +138,11 @@ module SalesforceDeployTool
 
     def push
 
-      renderer = ERB.new(@buildxml_erb)
-      File.open('build.xml','w') {|f| f.write renderer.result }
+      # Parameter validation
+      raise "package.xml not found under #{@full_src_dir}" if !File.exists? File.join(@full_src_dir,'package.xml')
+
+      renderer = ERB.new(@buildxml_erb, nil,'%<>-')
+      File.open('build.xml','w') {|f| f.write renderer.result(binding) }
 
       # Set env variables to run ant
       env_vars = ""
@@ -153,7 +165,16 @@ module SalesforceDeployTool
         exec_options[:failmsg]  =   nil
       end
 
-      cmd = @test ? " ant deployAndTestCode" : " ant deployCode"
+      if @run_all_tests  
+        cmd = " ant deployAndTestAllCode" 
+      else
+        if @run_tests
+          cmd = " ant deployAndTestCode"
+        else
+          cmd = " ant deployCode"
+        end
+      end
+        
       full_cmd = env_vars + cmd
 
       # Delete files to be ignored:

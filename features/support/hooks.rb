@@ -1,4 +1,4 @@
-config = YAML::load(File.open('config.yaml'))
+config = YAML::load(File.open('cucumber-config.yaml'))
 
 When /^I type my salesforce (.*)$/ do |input|
   raise "Please create credentials.yaml" if config[input.to_sym].nil? 

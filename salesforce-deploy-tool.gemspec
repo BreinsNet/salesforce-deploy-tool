@@ -27,5 +27,5 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'git', "~> 1.2"
   spec.add_runtime_dependency 'colorize', "~> 0.7"
   spec.add_runtime_dependency 'commander', "~> 4.2"
-  spec.add_runtime_dependency 'salesforce-dcgen', "~> 0.6.0"
+  spec.add_runtime_dependency 'salesforce-dcgen', "~> 0.7.0"
 end

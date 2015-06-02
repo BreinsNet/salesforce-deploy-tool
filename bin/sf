@@ -29,7 +29,6 @@ end
 begin
   config[:sandbox] = File.open(File.expand_path(SANDBOX_CONFIG_FILE)).read
 rescue
-  config[:sandbox] = nil
 end
 
 # Configuration variables firrst from ENV , if not config file
@@ -43,6 +42,7 @@ config[:src_dir]               =  ENV["SFDT_SRC_DIR"]               ||  config[:
 config[:username]              =  ENV["SFDT_USERNAME"]              ||  config[:username]
 config[:password]              =  ENV["SFDT_PASSWORD"]              ||  config[:password]
 config[:salesforce_url]        =  ENV["SFDT_SALESFORCE_URL"]        ||  config[:salesforce_url] 
+config[:sandbox]               =  ENV['SFDT_SANDBOX']               ||  config[:sandbox]
 
 # Project configs
 config[:version_file]          =  ENV["SFDT_VERSION_FILE"]          ||  config[:version_file]

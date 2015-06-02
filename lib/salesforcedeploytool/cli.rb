@@ -79,16 +79,17 @@ module SalesforceDeployTool
         c.option "--build_number NUMBER","Record build number on version file"
         c.option "--run-all-tests", "-T", "Deploy and test"
         c.option "--run-tests CSV_LIST", "-r CSV_LIST", "a CSV list of individual classes to run tests"
+        c.option "--check-only", "-c", "Check only, don't deploy"
         c.action do |args, options|
 
           # short flag mapping
+          options.check_only = true if options.c
           options.run_all_tests = true if options.T
           options.run_tests = options.r if options.r
           options.exclude = options.x if options.x
           options.sandbox = options.s if options.s
 
           # Parameter validation:
-
           if options.run_all_tests and options.run_tests
             puts "warning: --run-tests is ignored as --test has been declared "
           end
@@ -119,6 +120,7 @@ module SalesforceDeployTool
             config_tmp[:git_dir] = File.join(config[:tmp_dir],'repo_copy')
             FileUtils.cp_r config[:git_dir],config_tmp[:git_dir]
             sfdt_tmp = SalesforceDeployTool::App.new config_tmp
+            sfdt_tmp.clean_git_dir
             print "INFO: Pulling changes from #{config[:sandbox]} using url #{config[:salesforce_url]} to temporary directory to generate destructiveChanges.xml  "
             print( options.debug.nil? ? "" : "\n\n" )
             sfdt_tmp.pull
@@ -144,6 +146,9 @@ module SalesforceDeployTool
             # Enable test if option enabled
             sfdt.run_all_tests = options.run_all_tests.nil? ? false : true
             sfdt.run_tests = options.run_tests.split(',') unless options.run_tests.nil?
+
+            # Check only option:
+            sfdt.check_only = options.check_only
 
             # Push
             print( options.run_all_tests.nil? && options.run_tests.nil? ? "INFO: Deploying code to #{config[:sandbox]}:   ": "INFO: Deploying and Testing code to #{config[:sandbox]}:  " )

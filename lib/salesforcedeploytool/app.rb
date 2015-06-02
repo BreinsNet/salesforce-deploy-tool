@@ -4,6 +4,7 @@ module SalesforceDeployTool
 
     attr_accessor :build_number
     attr_accessor :run_all_tests
+    attr_accessor :check_only
 
     def initialize config
      
@@ -26,6 +27,7 @@ module SalesforceDeployTool
       @server_url = config[:salesforce_url]
 
       # Defaults
+      @check_only = false
       @run_tests = []
       @debug ||= config[:debug]
       @build_number ||= 'N/A'
@@ -166,13 +168,17 @@ module SalesforceDeployTool
       end
 
       if @run_all_tests  
-        cmd = " ant deployAndTestAllCode" 
+        cmd = " ant deployAndTestCode" 
       else
-        if @run_tests
-          cmd = " ant deployAndTestCode"
+        if ! @run_tests.empty?
+          cmd = " ant deployAndRunSpecifiedTests"
         else
           cmd = " ant deployCode"
         end
+      end
+
+      if @check_only
+        cmd = " ant checkOnlyCode"
       end
         
       full_cmd = env_vars + cmd

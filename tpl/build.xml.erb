@@ -19,21 +19,34 @@
       </sf:deploy>
     </target>
 
-    <target name="deployAndTestCode">
+    <target name="checkOnlyCode">
       <sf:deploy 
         username="${env.SF_USERNAME}" 
         password="${env.SF_PASSWORD}" 
         serverurl="${env.SF_SERVERURL}" 
         deployRoot="${env.SF_SRC_DIR}" 
         maxPoll="200" 
+        checkOnly="true"
         rollbackOnError="true" >
+      </sf:deploy>
+    </target>
+
+    <target name="deployAndRunSpecifiedTests">
+      <sf:deploy 
+        username="${env.SF_USERNAME}" 
+        password="${env.SF_PASSWORD}" 
+        serverurl="${env.SF_SERVERURL}" 
+        deployRoot="${env.SF_SRC_DIR}" 
+        maxPoll="200" 
+        rollbackOnError="true"
+        testLevel="RunSpecifiedTests">
 <% @run_tests.each do |test| -%>
       <runTest><%= test %></runTest>
 <% end -%>
       </sf:deploy>
     </target>
 
-    <target name="deployAndTestAllCode">
+    <target name="deployAndTestCode">
       <sf:deploy 
         username="${env.SF_USERNAME}" 
         password="${env.SF_PASSWORD}" 

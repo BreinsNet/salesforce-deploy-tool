@@ -9,15 +9,15 @@ Feature: Pull code from salesforce
     Then the exit status should be 0
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a using url https://test.salesforce.com.*OK
+    ^INFO: Pulling changes from testEnv using url https://test.salesforce.com.*OK
     """
 
   Scenario: Retrieve code from a specific sandbox
-    When I run `sf pull -s env_b`
+    When I run `sf pull -s testEnvAlt`
     Then the exit status should be 0
     And the output should match:
     """
-    ^INFO: Pulling changes from env_b using url https://test.salesforce.com.*OK
+    ^INFO: Pulling changes from testEnvAlt using url https://test.salesforce.com.*OK
     """
 
   Scenario: Retrieve code from a sandbox using a specific URL
@@ -28,7 +28,7 @@ Feature: Pull code from salesforce
     Then the exit status should be 1
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a using url https://invalid_url.*
+    ^INFO: Pulling changes from testEnv using url https://invalid_url.*
     """
 
   Scenario: Retrieve code from a production
@@ -45,15 +45,15 @@ Feature: Pull code from salesforce
     And the output should contain "BUILD SUCCESSFUL"
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a using url https://test.salesforce.com.*
+    ^INFO: Pulling changes from testEnv using url https://test.salesforce.com.*
     """
 
   Scenario: Retrieve code from a specific sandbox with debug output
-    When I run `sf pull -s env_a -d`
+    When I run `sf pull -s testEnv -d`
     Then the exit status should be 0
     And the output should contain "BUILD SUCCESSFUL"
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a using url https://test.salesforce.com.*$
+    ^INFO: Pulling changes from testEnv using url https://test.salesforce.com.*$
     """
 

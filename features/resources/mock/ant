@@ -1,0 +1,189 @@
+#!/bin/bash
+
+COMMAND=$1
+
+if [[ -z $SF_SRC_DIR ]]; then
+  echo "ERROR: SF_SRC_DIR Not defined"
+  exit 1
+fi
+
+if [[ -z $SF_USERNAME ]]; then
+  echo "ERROR: SF_USERNAME Not defined"
+  exit 1
+fi
+
+if [[ -z $SF_PASSWORD ]]; then
+  echo "ERROR: SF_PASSWORD Not defined"
+  exit 1
+fi
+
+if [[ -z $SF_SERVERURL ]]; then
+  echo "ERROR: SF_PASSWORD Not defined"
+  exit 1
+fi
+
+if [[ $SF_USERNAME == 'invalid_user' ]]; then
+  cat << EOF
+Buildfile: ${PWD}/build.xml
+
+${COMMAND}:
+
+BUILD FAILED
+${PWD}/build.xml:53: Invalid username, password, security token; or user locked out.
+
+Total time: 10 seconds
+
+EOF
+  exit 1
+fi
+
+if ! echo $SF_SERVERURL|grep -E 'https:\/\/(test|login).salesforce.com' > /dev/null 2>&1 ; then
+  cat << EOF
+Buildfile: ${PWD}/build.xml
+
+retrieveCode:
+[sf:retrieve] Note: use ant -verbose to get more information on the failure
+
+BUILD FAILED
+${PWD}/build.xml:53: Failed to login: Failed to send request to ${SF_SERVERURL}/services/Soap/u/31.0
+
+Total time: 6 seconds
+
+EOF
+
+  exit 1
+fi
+
+if [[ ! -f build.xml ]]; then
+  echo "ERROR: build.xml not found"
+  exit 1
+fi
+  
+if [[ ! -f $SF_SRC_DIR/package.xml ]]; then
+  echo "ERROR: package.xml not found"
+  exit 1
+fi
+
+if ! grep $COMMAND build.xml > /dev/null 2>&1 ; then
+  echo "ERROR: $COMMAND not found on build.xml"
+  exit 1
+fi
+
+case $COMMAND in
+"retrieveCode")
+  cat << EOF
+Buildfile: ${PWD}/build.xml
+
+retrieveCode:
+[sf:retrieve] Request for a retrieve submitted successfully.
+[sf:retrieve] Request ID for the current retrieve task: 09S11000002rKP5EAM
+[sf:retrieve] Waiting for server to finish processing the request...
+[sf:retrieve] Request Status: Pending
+[sf:retrieve] Request Status: InProgress
+[sf:retrieve] Request Status: Succeeded
+[sf:retrieve] Finished request 09S11000002rKP5EAM successfully.
+
+BUILD SUCCESSFUL
+Total time: 1 minute 38 seconds
+
+EOF
+;;
+"deployCode")
+  if echo $SF_SERVERURL |grep login > /dev/null 2>&1 ;then
+    cat << EOF
+Buildfile: ${PWD}/build.xml
+
+deployCode:
+[sf:deploy] Request for a deploy submitted successfully.
+[sf:deploy] Request ID for the current deploy task: 0Af2400000a0FeVCAU
+[sf:deploy] Waiting for server to finish processing the request...
+[sf:deploy] Request Status: Pending
+[sf:deploy] Request Status: InProgress (94/1473)  -- Processing Type: CustomObject
+[sf:deploy] Request Status: InProgress
+[sf:deploy] Request Status: InProgress (1204/1473)  -- Processing Type: ApprovalProcess
+[sf:deploy] Request Status: InProgress (1212/1473)  -- Processing Type: ApexClass
+[sf:deploy] Request Status: InProgress (1442/1473)  -- Processing Type: PermissionSet
+[sf:deploy] Request Status: InProgress (7/227)  -- Running Test: FooClassTest
+[sf:deploy] Request Status: InProgress (26/227)  -- Running Test: BarClassTest
+[sf:deploy] Request Status: Succeeded
+[sf:deploy] *********** DEPLOYMENT SUCCEEDED ***********
+[sf:deploy] Finished request 0Af2400000a0FeVCAU successfully.
+
+BUILD SUCCESSFUL
+EOF
+  else
+        cat << EOF
+Buildfile: ${PWD}/build.xml
+
+deployCode:
+[sf:deploy] Request for a deploy submitted successfully.
+[sf:deploy] Request ID for the current deploy task: 0Af2400000a0FeVCAU
+[sf:deploy] Waiting for server to finish processing the request...
+[sf:deploy] Request Status: Pending
+[sf:deploy] Request Status: InProgress (94/1473)  -- Processing Type: CustomObject
+[sf:deploy] Request Status: InProgress
+[sf:deploy] Request Status: InProgress (1204/1473)  -- Processing Type: ApprovalProcess
+[sf:deploy] Request Status: InProgress (1212/1473)  -- Processing Type: ApexClass
+[sf:deploy] Request Status: InProgress (1442/1473)  -- Processing Type: PermissionSet
+[sf:deploy] Request Status: Succeeded
+[sf:deploy] *********** DEPLOYMENT SUCCEEDED ***********
+[sf:deploy] Finished request 0Af2400000a0FeVCAU successfully.
+
+BUILD SUCCESSFUL
+
+EOF
+fi
+;;
+"deployAndTestCode"|"deployAndRunSpecifiedTests")
+    cat << EOF
+Buildfile: ${PWD}/build.xml
+
+${COMMAND}:
+[sf:deploy] Request for a deploy submitted successfully.
+[sf:deploy] Request ID for the current deploy task: 0Af2400000a0FeVCAU
+[sf:deploy] Waiting for server to finish processing the request...
+[sf:deploy] Request Status: Pending
+[sf:deploy] Request Status: InProgress (94/1473)  -- Processing Type: CustomObject
+[sf:deploy] Request Status: InProgress
+[sf:deploy] Request Status: InProgress (1204/1473)  -- Processing Type: ApprovalProcess
+[sf:deploy] Request Status: InProgress (1212/1473)  -- Processing Type: ApexClass
+[sf:deploy] Request Status: InProgress (1212/1473)  -- Processing Type: ApexClass
+[sf:deploy] Request Status: InProgress (1442/1473)  -- Processing Type: PermissionSet
+[sf:deploy] Request Status: InProgress (7/227)  -- Running Test: FooClassTest
+[sf:deploy] Request Status: InProgress (26/227)  -- Running Test: BarClassTest
+[sf:deploy] Request Status: Succeeded
+[sf:deploy] *********** DEPLOYMENT SUCCEEDED ***********
+[sf:deploy] Finished request 0Af2400000a0FeVCAU successfully.
+
+BUILD SUCCESSFUL
+EOF
+;;
+"checkOnlyCode")
+  cat << EOF
+Buildfile: /home/vagrant/salesforce/build.xml
+
+checkOnlyCode:
+[sf:deploy] Request for a deploy submitted successfully.
+[sf:deploy] Request ID for the current deploy task: 0Afg000000Dwn66CAB
+[sf:deploy] Waiting for server to finish processing the request...
+[sf:deploy] Request Status: Pending
+[sf:deploy] Request Status: InProgress
+[sf:deploy] Request Status: InProgress (49/1115)  -- Processing Type: ApexPage
+[sf:deploy] Request Status: InProgress (49/1115)  -- Processing Type: ApexPage
+[sf:deploy] Request Status: InProgress (125/1115)  -- Processing Type: CustomObject
+[sf:deploy] Request Status: InProgress (912/1115)  -- Processing Type: Workflow
+[sf:deploy] Request Status: InProgress (926/1115)  -- Processing Type: ApexClass
+[sf:deploy] Request Status: InProgress (1101/1115)  -- Processing Type: ApexTrigger
+[sf:deploy] Request Status: InProgress (1108/1115)  -- Processing Type: Profile
+[sf:deploy] Request Status: InProgress
+[sf:deploy] Request Status: Succeeded
+[sf:deploy] *********** DEPLOYMENT SUCCEEDED ***********
+[sf:deploy] Finished request 0Afg000000Dwn66CAB successfully.
+
+BUILD SUCCESSFUL
+Total time: 5 minutes 2 seconds
+EOF
+
+esac
+
+sleep 1

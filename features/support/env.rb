@@ -2,19 +2,25 @@ require 'aruba/cucumber'
 require 'filewatcher'
 require 'git'
 
-# Load configuratiohn
-config = YAML::load(File.open('cucumber-config.yaml'))
+# Necesary environment variables:
+ENV["SFDT_GIT_REPO"] = File.join(Dir.pwd,'features/resources/repo')
+ENV["SFDT_GIT_DIR"] = 'repo'
+ENV["SFDT_SRC_DIR"] = 'salesforce/src'
+ENV["SFDT_USERNAME"] = 'john.doe@example.com'
+ENV["SFDT_PASSWORD"] = 'mysecurepass'
+ENV["SFDT_SANDBOX"] = 'testEnv'
+
+# Create a temprary home directory:
+new_home = File.join(Dir.pwd,'tmp','home') 
+ENV["HOME"] = new_home
+FileUtils.rm_rf new_home if Dir.exists? new_home
+FileUtils.mkdir new_home
 
 # Cucumber / aruba configuration parameters
 Before do
   @aruba_timeout_seconds = 300
-end
-
-# Set environment variables
-Before do
-  config[:environment_variables].keys.each do |key|
-    ENV[key.to_s.upcase] = config[:environment_variables][key]
-  end
+  # Use mock ant
+  FileUtils.cp "features/resources/mock/ant","bin/ant"
 end
 
 # Remove current configurations only once
@@ -27,4 +33,8 @@ Before '@push,@pull' do
   uri = ENV['SFDT_GIT_REPO']
   name = File.join 'tmp', 'aruba', ENV['SFDT_GIT_DIR']
   Git.clone(uri, name)
+end
+
+at_exit do
+  FileUtils.rm 'bin/ant'
 end

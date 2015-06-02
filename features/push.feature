@@ -7,233 +7,241 @@ Feature: Push code to salesforce
   Scenario: Push code to a sandbox
     When I run `sf push`
     Then the exit status should be 0
-    And a file named "sfdt_git_dir/sfdt_src_dir/destructiveChanges.xml" should exist
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a using url https:\/\/test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
+    ^INFO: Pulling changes from testEnv using url https:\/\/test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
     ^INFO: Creating destructive changes xml$
-    ^INFO: Deploying code to env_a:.*OK$
+    ^INFO: Deploying code to testEnv:.*OK$
     """
 
   Scenario: Push code to a different sandbox
-    When I run `sf push -s env_b`
+    When I run `sf push -s testEnvAlt`
     Then the exit status should be 0
-    And a file named "sfdt_git_dir/sfdt_src_dir/destructiveChanges.xml" should exist
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
     And the output should match:
     """
-    ^INFO: Pulling changes from env_b using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
+    ^INFO: Pulling changes from testEnvAlt using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
     ^INFO: Creating destructive changes xml$
-    ^INFO: Deploying code to env_b:.*OK$
+    ^INFO: Deploying code to testEnvAlt:.*OK$
     """
 
   Scenario: Push code to production should use the url login.salesorce.com
-    Given I set the environment variables to:
-      | variable      | value                |
-      | SFDT_USERNAME | invalid_user         |
-      | SFDT_PASSWORD | invalid_pass         |
     When I run `sf push -s prod`
-    Then the exit status should be 1
+    Then the exit status should be 0
     And the output should match:
     """
     ^INFO: Pulling changes from prod using url https://login.salesforce.com to temporary directory to generate destructiveChanges.xml.*$
     """
-
   Scenario: Push code to a sandbox with debug information
     When I run `sf push -d`
     Then the exit status should be 0
-    And the output should match /^.* env_a .*BUILD SUCCESSFUL.*Diff between.*Changes detected.*File generated.*BUILD SUCCESSFUL.*$/
-    And a file named "sfdt_git_dir/sfdt_src_dir/destructiveChanges.xml" should exist
+    And the output should match /^.* testEnv .*BUILD SUCCESSFUL.*Diff between.*Changes detected.*File generated.*deployCode.*BUILD SUCCESSFUL.*$/
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
 
   Scenario: Push code to a sandbox with debug information to a different sandbox
-    When I run `sf push -d -s env_b`
+    When I run `sf push -d -s testEnvAlt`
     Then the exit status should be 0
-    And the output should match /^.* env_b .*BUILD SUCCESSFUL.*Diff between.*Changes detected.*File generated.*BUILD SUCCESSFUL.*$/
-    And a file named "sfdt_git_dir/sfdt_src_dir/destructiveChanges.xml" should exist
+    And the output should match /^.* testEnvAlt .*BUILD SUCCESSFUL.*Diff between.*Changes detected.*File generated.*BUILD SUCCESSFUL.*$/
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
 
   Scenario: Push code to a sandbox and trigger all the tests
     When I run `sf push -T`
     Then the exit status should be 0
-    And a file named "sfdt_git_dir/sfdt_src_dir/destructiveChanges.xml" should exist
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
     And the output should match:
     """
-    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
+    ^INFO: Pulling changes from testEnv using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
     ^INFO: Creating destructive changes xml$
-    ^INFO: Deploying and Testing code to env_a:.*OK$
+    ^INFO: Deploying and Testing code to testEnv:.*OK$
     """
-
   Scenario: Push code to a sandbox and trigger all the tests in debug mode
     When I run `sf push -T -d`
     Then the exit status should be 0
-    And a file named "sfdt_git_dir/sfdt_src_dir/destructiveChanges.xml" should exist
-    And the output should match /^.* env_a .*BUILD SUCCESSFUL.*Diff between.*Changes detected.*File generated.*Running Test:.*DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL.*$/
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the output should match /^.* testEnv .*BUILD SUCCESSFUL.*Diff between.*Changes detected.*File generated.*Running Test:.*DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL.*$/
 
   Scenario: Push code to a sandbox in append mode
     When I run `sf push -a`
     Then the exit status should be 0
-    And a file named "sfdt_git_dir/sfdt_src_dir/destructiveChanges.xml" should not exist
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should not exist
     And the output should match:
     """
-    ^INFO: Deploying code to env_a:.*OK$
+    ^INFO: Deploying code to testEnv:.*OK$
     """
 
   Scenario: Push code to a sandbox in append mode and run all tests
     When I run `sf push -a -T`
     Then the exit status should be 0
-    And a file named "sfdt_git_dir/sfdt_src_dir/destructiveChanges.xml" should not exist
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should not exist
     And the output should match:
     """
-    ^INFO: Deploying and Testing code to env_a:.*OK$
+    ^INFO: Deploying and Testing code to testEnv:.*OK$
     """
 
   Scenario: Push code to a sandbox in append mode and run all tests and output debug information
     When I run `sf push -a -T -d`
     Then the exit status should be 0
-    And a file named "sfdt_git_dir/sfdt_src_dir/destructiveChanges.xml" should not exist
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should not exist
     And the output should match:
     """
-    ^INFO: Deploying and Testing code to env_a:  $
-    ^$
-    ^Buildfile: .*$
-    ^$
-    ^deployAndTestAllCode:$
-    """
-    And the output should match /Running Test/
-    And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
-
-  Scenario: Push code to a sandbox with a build number
-    Given I set the environment variables to:
-      | variable                  | value                |
-      | SFDT_VERSION_FILE         | version_file         |
-      | SFDT_BUILD_NUMBER_PATTERN | build_number_pattern |
-    When I watch "sfdt_git_dir/sfdt_src_dir/version_file" for changes and copy to "test_file"
-    And I run `sf push --build_number 123456789`
-    Then the exit status should be 0
-    And the file "test_file" should contain "123456789"
-    And the file "sfdt_git_dir/sfdt_src_dir/version_file" should contain "build_number_pattern"
-    And the output should match:
-    """
-    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
-    ^INFO: Creating destructive changes xml$
-    ^INFO: Deploying code to env_a:.*OK$
-    """
-
-  Scenario: Push code to a sandbox with the commit hash stamped into a version file
-    Given I set the environment variables to:
-      | variable                  | value                |
-      | SFDT_VERSION_FILE         | version_file         |
-      | SFDT_COMMIT_HASH_PATTERN  | commit_hash_pattern  |
-    When I watch "sfdt_git_dir/sfdt_src_dir/version_file" for changes and copy to "test_file"
-    And I run `sf push`
-    Then the exit status should be 0
-    And the file "test_file" should not contain "commit_hash_pattern"
-    And the file "sfdt_git_dir/sfdt_src_dir/version_file" should contain "commit_hash_pattern"
-    And the output should match:
-    """
-    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
-    ^INFO: Creating destructive changes xml$
-    ^INFO: Deploying code to env_a:.*OK$
-    """
-
-  Scenario: Push code to a sandbox with the repo not being cloned it should point the user to run sf config
-    When I delete the repository directory
-    And I run `sf push -d`
-    Then the exit status should be 1
-    And the output should match:
-    """
-    ^ERROR: The source directory .* is not a valid salesforce source directory
-    """
-
-  Scenario: Push code to a sandbox specifying a different URL
-    Given I set the environment variables to:
-      | variable             | value                                                   |
-      | SFDT_SALESFORCE_URL  | https://invalid_url.salesforce.com |
-    When I run `sf push -d`
-    Then the exit status should be 1
-    And the output should match:
-    """
-    .*Failed to login: Failed to send request to https://invalid_url.salesforce.com.*
-    """
-
-  Scenario: Push code to a sandbox and trigger individual tests in debug mode
-    When I run `sf push -r individual_test -d`
-    Then the exit status should be 0
-    And a file named "sfdt_git_dir/sfdt_src_dir/destructiveChanges.xml" should exist
-    And the output should match:
-    """
-    ^INFO: Deploying and Testing code to env_a:  $
-    ^$
-    ^Buildfile: .*$
-    ^$
-    ^deployAndTestAllCode:$
-    """
-    And the output should match /Running Test/
-    And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
-
-  Scenario: Push code to a sandbox with a build number
-    Given I set the environment variables to:
-      | variable                  | value                |
-      | SFDT_VERSION_FILE         | version_file         |
-      | SFDT_BUILD_NUMBER_PATTERN | build_number_pattern |
-    When I watch "sfdt_git_dir/sfdt_src_dir/version_file" for changes and copy to "test_file"
-    And I run `sf push --build_number 123456789`
-    Then the exit status should be 0
-    And the file "test_file" should contain "123456789"
-    And the file "sfdt_git_dir/sfdt_src_dir/version_file" should contain "build_number_pattern"
-    And the output should match:
-    """
-    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
-    ^INFO: Creating destructive changes xml$
-    ^INFO: Deploying code to env_a:.*OK$
-    """
-
-  Scenario: Push code to a sandbox with the commit hash stamped into a version file
-    Given I set the environment variables to:
-      | variable                  | value                |
-      | SFDT_VERSION_FILE         | version_file         |
-      | SFDT_COMMIT_HASH_PATTERN  | commit_hash_pattern  |
-    When I watch "sfdt_git_dir/sfdt_src_dir/version_file" for changes and copy to "test_file"
-    And I run `sf push`
-    Then the exit status should be 0
-    And the file "test_file" should not contain "commit_hash_pattern"
-    And the file "sfdt_git_dir/sfdt_src_dir/version_file" should contain "commit_hash_pattern"
-    And the output should match:
-    """
-    ^INFO: Pulling changes from env_a using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
-    ^INFO: Creating destructive changes xml$
-    ^INFO: Deploying code to env_a:.*OK$
-    """
-
-  Scenario: Push code to a sandbox with the repo not being cloned it should point the user to run sf config
-    When I delete the repository directory
-    And I run `sf push -d`
-    Then the exit status should be 1
-    And the output should match:
-    """
-    ^ERROR: The source directory .* is not a valid salesforce source directory
-    """
-
-  Scenario: Push code to a sandbox specifying a different URL
-    Given I set the environment variables to:
-      | variable             | value                                                   |
-      | SFDT_SALESFORCE_URL  | https://invalid_url.salesforce.com |
-    When I run `sf push -d`
-    Then the exit status should be 1
-    And the output should match:
-    """
-    .*Failed to login: Failed to send request to https://invalid_url.salesforce.com.*
-    """
-  @new
-  Scenario: Push code to a sandbox and trigger individual tests in debug mode
-    When I run `sf push -r individual_test -d`
-    Then the exit status should be 0
-    And a file named "sfdt_git_dir/sfdt_src_dir/destructiveChanges.xml" should exist
-    And the output should match:
-    """
-    ^INFO: Deploying and Testing code to env_a:  $
+    ^INFO: Deploying and Testing code to testEnv:  $
     ^$
     ^Buildfile: .*$
     ^$
     ^deployAndTestCode:$
     """
-    And the output should match /Running Test: individual_test/
+    And the output should match /Running Test/
+    And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
+
+  Scenario: Push code to a sandbox with a build number
+    Given I set the environment variables to:
+      | variable                  | value                   |
+      | SFDT_VERSION_FILE         | classes/VersionTest.cls |
+      | SFDT_BUILD_NUMBER_PATTERN | %%BUILD_NUMBER%%        |
+    When I watch "repo/salesforce/src/classes/VersionTest.cls" for changes and copy to "test_file"
+    And I run `sf push --build_number 123456789`
+    Then the exit status should be 0
+    And the file "test_file" should contain "123456789"
+    And the file "repo/salesforce/src/classes/VersionTest.cls" should contain "%%BUILD_NUMBER%%"
+    And the output should match:
+    """
+    ^INFO: Pulling changes from testEnv using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
+    ^INFO: Creating destructive changes xml$
+    ^INFO: Deploying code to testEnv:.*OK$
+    """
+
+  @test
+  Scenario: Push code to a sandbox with the commit hash stamped into a version file
+    Given I set the environment variables to:
+      | variable                  | value                   |
+      | SFDT_VERSION_FILE         | classes/VersionTest.cls |
+      | SFDT_COMMIT_HASH_PATTERN  | %%COMMIT_HASH%%        |
+    When I watch "repo/salesforce/src/classes/VersionTest.cls" for changes and copy to "test_file"
+    And I run `sf push`
+    Then the exit status should be 0
+    And the file "test_file" should contain "1d300e3c8d30b80bb88cfce2b16c3070488f0440"
+    And the file "repo/salesforce/src/classes/VersionTest.cls" should contain "%%COMMIT_HASH%%"
+    And the output should match:
+    """
+    ^INFO: Pulling changes from testEnv using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
+    ^INFO: Creating destructive changes xml$
+    ^INFO: Deploying code to testEnv:.*OK$
+    """
+
+  Scenario: Push code to a sandbox with the repo not being cloned it should point the user to run sf config
+    When I delete the repository directory
+    And I run `sf push -d`
+    Then the exit status should be 1
+    And the output should match:
+    """
+    ^ERROR: The source directory .* is not a valid salesforce source directory
+    """
+
+  Scenario: Push code to a sandbox specifying a different URL
+    Given I set the environment variables to:
+      | variable             | value                                                   |
+      | SFDT_SALESFORCE_URL  | https://invalid_url.salesforce.com |
+    When I run `sf push -d`
+    Then the exit status should be 1
+    And the output should match:
+    """
+    .*Failed to login: Failed to send request to https://invalid_url.salesforce.com.*
+    """
+
+  Scenario: Push code to a sandbox and trigger individual tests in debug mode
+    When I run `sf push -r individual_test -d`
+    Then the exit status should be 0
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the output should match:
+    """
+    ^INFO: Deploying and Testing code to testEnv:  $
+    ^$
+    ^Buildfile: .*$
+    ^$
+    ^deployAndRunSpecifiedTests:$
+    """
+    And the output should match /Running Test/
+    And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
+
+  Scenario: Push code to a sandbox with a build number
+    Given I set the environment variables to:
+      | variable                  | value                   |
+      | SFDT_VERSION_FILE         | classes/VersionTest.cls |
+      | SFDT_BUILD_NUMBER_PATTERN | %%BUILD_NUMBER%%        |
+    When I watch "repo/salesforce/src/classes/VersionTest.cls" for changes and copy to "test_file"
+    And I run `sf push --build_number 123456789`
+    Then the exit status should be 0
+    And the file "test_file" should contain "123456789"
+    And the file "repo/salesforce/src/classes/VersionTest.cls" should contain "%%BUILD_NUMBER%%"
+    And the output should match:
+    """
+    ^INFO: Pulling changes from testEnv using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
+    ^INFO: Creating destructive changes xml$
+    ^INFO: Deploying code to testEnv:.*OK$
+    """
+
+  Scenario: Push code to a sandbox with the commit hash stamped into a version file
+    Given I set the environment variables to:
+      | variable                  | value                   |
+      | SFDT_VERSION_FILE         | classes/VersionTest.cls |
+      | SFDT_COMMIT_HASH_PATTERN  | %%COMMIT_HASH%%        |
+    When I watch "repo/salesforce/src/classes/VersionTest.cls" for changes and copy to "test_file"
+    And I run `sf push`
+    Then the exit status should be 0
+    And the file "test_file" should contain "1d300e3c8d30b80bb88cfce2b16c3070488f0440"
+    And the file "repo/salesforce/src/classes/VersionTest.cls" should contain "%%COMMIT_HASH%%"
+    And the output should match:
+    """
+    ^INFO: Pulling changes from testEnv using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
+    ^INFO: Creating destructive changes xml$
+    ^INFO: Deploying code to testEnv:.*OK$
+    """
+
+  Scenario: Push code to a sandbox with the repo not being cloned it should point the user to run sf config
+    When I delete the repository directory
+    And I run `sf push -d`
+    Then the exit status should be 1
+    And the output should match:
+    """
+    ^ERROR: The source directory .* is not a valid salesforce source directory
+    """
+
+  Scenario: Push code to a sandbox specifying a different URL
+    Given I set the environment variables to:
+      | variable             | value                                                   |
+      | SFDT_SALESFORCE_URL  | https://invalid_url.salesforce.com |
+    When I run `sf push -d`
+    Then the exit status should be 1
+    And the output should match:
+    """
+    .*Failed to login: Failed to send request to https://invalid_url.salesforce.com.*
+    """
+  Scenario: Push code to a sandbox and trigger individual tests in debug mode
+    When I run `sf push -r individual_test -d`
+    Then the exit status should be 0
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the output should match:
+    """
+    ^INFO: Deploying and Testing code to testEnv:  $
+    ^$
+    ^Buildfile: .*$
+    ^$
+    ^deployAndRunSpecifiedTests:$
+    """
+    And the output should match /Running Test: .*/
+    And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
+
+  Scenario: Push code to a sandbox in check only mode using debug
+    When I run `sf push -c -d`
+    Then the exit status should be 0
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the output should match:
+    """
+    ^INFO: Deploying code to testEnv:.*$
+    ^$
+    ^Buildfile: .*$
+    ^$
+    ^checkOnlyCode:$
+    """
     And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/

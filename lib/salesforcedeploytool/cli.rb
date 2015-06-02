@@ -80,6 +80,7 @@ module SalesforceDeployTool
         c.option "--run-all-tests", "-T", "Deploy and test"
         c.option "--run-tests CSV_LIST", "-r CSV_LIST", "a CSV list of individual classes to run tests"
         c.option "--check-only", "-c", "Check only, don't deploy"
+        c.option "--include CSV_LIST", "-i CSV_LIST", "A CSV list of metadata type to include when creating destructiveChange.xml"
         c.action do |args, options|
 
           # short flag mapping
@@ -88,6 +89,7 @@ module SalesforceDeployTool
           options.run_tests = options.r if options.r
           options.exclude = options.x if options.x
           options.sandbox = options.s if options.s
+          options.include = options.i if options.i
 
           # Parameter validation:
           if options.run_all_tests and options.run_tests
@@ -132,6 +134,7 @@ module SalesforceDeployTool
             dc_gen.destination = File.join(config_tmp[:git_dir],config_tmp[:src_dir])
             dc_gen.output = destructive_change_file
             dc_gen.exclude = options.exclude.split(',') unless options.exclude.nil?
+            dc_gen.include = options.include.split(',') unless options.include.nil?
             dc_gen.verbose = false if not options.debug
             dc_gen.generate_destructive_changes
 

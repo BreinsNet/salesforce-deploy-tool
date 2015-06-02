@@ -245,3 +245,23 @@ Feature: Push code to salesforce
     ^checkOnlyCode:$
     """
     And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
+
+  @new
+  Scenario: Push code to a sandbox in debug mode and exclude specific metadata objects to exclude
+    When I run `sf push -e Account.Sort__c -d`
+    Then the exit status should be 0
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the output should match /Pulling.*testEnv.*https:..test.salesforce.com.*destructiveChanges.xml/
+    And the output should match /excluded: Account.Sort__c/
+    And the output should match /INFO: Deploying code to testEnv/
+    And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
+
+  @new
+  Scenario: Push code to a sandbox in debug mode and specifieng specific metadata to destroy
+    When I run `sf push -i apexclass -d`
+    Then the exit status should be 0
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the output should match /Pulling.*testEnv.*https:..test.salesforce.com.*destructiveChanges.xml/
+    And the output should match /included: apexclass/
+    And the output should match /INFO: Deploying code to testEnv/
+    And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/

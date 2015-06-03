@@ -8,6 +8,7 @@ Feature: Push code to salesforce
     When I run `sf push`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
     ^INFO: Pulling changes from testEnv using url https:\/\/test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
@@ -19,6 +20,7 @@ Feature: Push code to salesforce
     When I run `sf push -s testEnvAlt`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
     ^INFO: Pulling changes from testEnvAlt using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
@@ -29,6 +31,7 @@ Feature: Push code to salesforce
   Scenario: Push code to production should use the url login.salesorce.com
     When I run `sf push -s prod`
     Then the exit status should be 0
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
     ^INFO: Pulling changes from prod using url https://login.salesforce.com to temporary directory to generate destructiveChanges.xml.*$
@@ -36,18 +39,21 @@ Feature: Push code to salesforce
   Scenario: Push code to a sandbox with debug information
     When I run `sf push -d`
     Then the exit status should be 0
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match /^.* testEnv .*BUILD SUCCESSFUL.*Diff between.*Changes detected.*File generated.*deployCode.*BUILD SUCCESSFUL.*$/
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
 
   Scenario: Push code to a sandbox with debug information to a different sandbox
     When I run `sf push -d -s testEnvAlt`
     Then the exit status should be 0
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match /^.* testEnvAlt .*BUILD SUCCESSFUL.*Diff between.*Changes detected.*File generated.*BUILD SUCCESSFUL.*$/
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
 
   Scenario: Push code to a sandbox and trigger all the tests
     When I run `sf push -T`
     Then the exit status should be 0
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
     And the output should match:
     """
@@ -58,6 +64,7 @@ Feature: Push code to salesforce
   Scenario: Push code to a sandbox and trigger all the tests in debug mode
     When I run `sf push -T -d`
     Then the exit status should be 0
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
     And the output should match /^.* testEnv .*BUILD SUCCESSFUL.*Diff between.*Changes detected.*File generated.*Running Test:.*DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL.*$/
 
@@ -104,6 +111,7 @@ Feature: Push code to salesforce
     Then the exit status should be 0
     And the file "test_file" should contain "123456789"
     And the file "repo/salesforce/src/classes/VersionTest.cls" should contain "%%BUILD_NUMBER%%"
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
     ^INFO: Pulling changes from testEnv using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
@@ -120,8 +128,9 @@ Feature: Push code to salesforce
     When I watch "repo/salesforce/src/classes/VersionTest.cls" for changes and copy to "test_file"
     And I run `sf push`
     Then the exit status should be 0
-    And the file "test_file" should contain "1d300e3c8d30b80bb88cfce2b16c3070488f0440"
+    And the file "test_file" should contain "aac66ee0d404c124fbcafd32a054664de4fdd3da"
     And the file "repo/salesforce/src/classes/VersionTest.cls" should contain "%%COMMIT_HASH%%"
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
     ^INFO: Pulling changes from testEnv using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
@@ -153,6 +162,7 @@ Feature: Push code to salesforce
     When I run `sf push -r individual_test -d`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
     ^INFO: Deploying and Testing code to testEnv:  $
@@ -174,6 +184,7 @@ Feature: Push code to salesforce
     Then the exit status should be 0
     And the file "test_file" should contain "123456789"
     And the file "repo/salesforce/src/classes/VersionTest.cls" should contain "%%BUILD_NUMBER%%"
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
     ^INFO: Pulling changes from testEnv using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
@@ -189,8 +200,9 @@ Feature: Push code to salesforce
     When I watch "repo/salesforce/src/classes/VersionTest.cls" for changes and copy to "test_file"
     And I run `sf push`
     Then the exit status should be 0
-    And the file "test_file" should contain "1d300e3c8d30b80bb88cfce2b16c3070488f0440"
+    And the file "test_file" should contain "aac66ee0d404c124fbcafd32a054664de4fdd3da"
     And the file "repo/salesforce/src/classes/VersionTest.cls" should contain "%%COMMIT_HASH%%"
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
     ^INFO: Pulling changes from testEnv using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
@@ -221,6 +233,7 @@ Feature: Push code to salesforce
     When I run `sf push -r individual_test -d`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
     ^INFO: Deploying and Testing code to testEnv:  $
@@ -236,6 +249,7 @@ Feature: Push code to salesforce
     When I run `sf push -c -d`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
     ^INFO: Deploying code to testEnv:.*$
@@ -246,7 +260,6 @@ Feature: Push code to salesforce
     """
     And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
 
-  @new
   Scenario: Push code to a sandbox in debug mode and exclude specific metadata objects to exclude
     When I run `sf push -e Account.Sort__c -d`
     Then the exit status should be 0
@@ -256,12 +269,26 @@ Feature: Push code to salesforce
     And the output should match /INFO: Deploying code to testEnv/
     And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
 
-  @new
   Scenario: Push code to a sandbox in debug mode and specifieng specific metadata to destroy
     When I run `sf push -i apexclass -d`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "repo/salesforce/src/destructiveChanges.xml" should contain "ApexClass"
+    And the file "repo/salesforce/src/destructiveChanges.xml" should not contain "ApexPage"
     And the output should match /Pulling.*testEnv.*https:..test.salesforce.com.*destructiveChanges.xml/
     And the output should match /included: apexclass/
+    And the output should match /INFO: Deploying code to testEnv/
+    And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
+
+  @new
+  Scenario: Push code to a sandbox in debug mode and specifieng specific metadata exclude from destructive change
+    When I run `sf push -e NewVersionTest -d`
+    Then the exit status should be 0
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "repo/salesforce/src/destructiveChanges.xml" should not contain "ApexClass"
+    And the file "repo/salesforce/src/destructiveChanges.xml" should not contain "NewVersionTest"
+    And the file "repo/salesforce/src/destructiveChanges.xml" should contain "ApexPage"
+    And the output should match /Pulling.*testEnv.*https:..test.salesforce.com.*destructiveChanges.xml/
+    And the output should match /excluded: NewVersionTest/
     And the output should match /INFO: Deploying code to testEnv/
     And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/

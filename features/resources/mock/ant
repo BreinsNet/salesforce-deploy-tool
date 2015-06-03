@@ -71,6 +71,18 @@ fi
 
 case $COMMAND in
 "retrieveCode")
+
+  # Add two more classes and two more pages so to simulate
+  # Destructive changes
+  cd $SF_SRC_DIR
+  git reset --hard
+  old_dir=`pwd`
+  cd $SF_SRC_DIR/classes
+  ls|tail -2|while read class;do cp $class New$class;done
+  cd $SF_SRC_DIR/pages
+  ls|tail -2|while read page;do cp $page New$page;done
+  cd $old_dir
+
   cat << EOF
 Buildfile: ${PWD}/build.xml
 
@@ -186,4 +198,4 @@ EOF
 
 esac
 
-sleep 1
+sleep 0.4

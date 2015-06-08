@@ -146,8 +146,40 @@ BUILD SUCCESSFUL
 EOF
 fi
 ;;
-"deployAndTestCode"|"deployAndRunSpecifiedTests")
-    cat << EOF
+"deployAndTestCode")
+  cat << EOF
+Buildfile: ${PWD}/build.xml
+
+${COMMAND}:
+[sf:deploy] Request for a deploy submitted successfully.
+[sf:deploy] Request ID for the current deploy task: 0Af2400000a0FeVCAU
+[sf:deploy] Waiting for server to finish processing the request...
+[sf:deploy] Request Status: Pending
+[sf:deploy] Request Status: InProgress (94/1473)  -- Processing Type: CustomObject
+[sf:deploy] Request Status: InProgress
+[sf:deploy] Request Status: InProgress (1204/1473)  -- Processing Type: ApprovalProcess
+[sf:deploy] Request Status: InProgress (1212/1473)  -- Processing Type: ApexClass
+[sf:deploy] Request Status: InProgress (1212/1473)  -- Processing Type: ApexClass
+[sf:deploy] Request Status: InProgress (1442/1473)  -- Processing Type: PermissionSet
+[sf:deploy] Request Status: InProgress (7/227)  -- Running Test: FooClassTest
+[sf:deploy] Request Status: InProgress (26/227)  -- Running Test: BarClassTest
+[sf:deploy] Request Status: Succeeded
+[sf:deploy] *********** DEPLOYMENT SUCCEEDED ***********
+[sf:deploy] Finished request 0Af2400000a0FeVCAU successfully.
+
+BUILD SUCCESSFUL
+EOF
+;;
+"deployAndRunSpecifiedTests")
+  if ! grep 'testLevel="RunSpecifiedTests"' build.xml > /dev/null 2>&1; then
+    echo "ERROR: RunSpecifiedTests is not in build.xml"
+    exit 1
+  fi
+  if ! grep -E '<runTest>.*<\/runTest>' build.xml > /dev/null 2>&1; then
+    echo "ERROR: <runTest> tag is not in build.xml"
+    exit 1
+  fi
+  cat << EOF
 Buildfile: ${PWD}/build.xml
 
 ${COMMAND}:

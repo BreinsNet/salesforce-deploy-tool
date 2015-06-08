@@ -51,17 +51,22 @@ config[:commit_hash_pattern]   =  ENV["SFDT_COMMIT_HASH_PATTERN"]   ||  config[:
 config[:deploy_ignore_files]   =  ENV["SFDT_DEPLOY_IGNORE_FILES"].nil? ? config[:deploy_ignore_files] : ENV["SFDT_DEPLOY_IGNORE_FILES"].split(',')
 
 # Minimal config validation
-abort "Config error: src_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_SRC_DIR" if config[:src_dir].nil?
-abort "Config error: git_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_GIT_DIR" if config[:git_dir].nil?
-abort "Config error: git_repo not found in #{GLOBAL_CONFIG_FILE} or through SFDT_GIT_DIR" if config[:git_repo].nil?
-abort "Config error: username not found in #{GLOBAL_CONFIG_FILE} or through SFDT_USERNAME" if config[:username].nil? && ARGV[0] != 'config'
-abort "Config error: password not found in #{GLOBAL_CONFIG_FILE} or through SFDT_PASSWORD" if config[:password].nil? && ARGV[0] != 'config'
+abort "Config error: src_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_SRC_DIR" \
+  if config[:src_dir].nil? && !['-v'].include?(ARGV.first)
+abort "Config error: git_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_GIT_DIR" \
+  if config[:git_dir].nil? && !['-v'].include?(ARGV.first)
+abort "Config error: git_repo not found in #{GLOBAL_CONFIG_FILE} or through SFDT_GIT_DIR" \
+  if config[:git_repo].nil? && !['-v'].include?(ARGV.first)
+abort "Config error: username not found in #{GLOBAL_CONFIG_FILE} or through SFDT_USERNAME" \
+  if config[:username].nil? && !['config','-v'].include?(ARGV.first)
+abort "Config error: password not found in #{GLOBAL_CONFIG_FILE} or through SFDT_PASSWORD" \
+  if config[:password].nil? && !['config','-v'].include?(ARGV.first)
 
 # Create a temporary directory
 config[:tmp_dir] = Dir.mktmpdir 'sfdt-'
 
-begin
   SalesforceDeployTool::CLI.new.run config 
+begin
 rescue => e
   puts "ERROR: #{e}"
   exit 1

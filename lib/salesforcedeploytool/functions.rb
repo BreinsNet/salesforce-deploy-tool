@@ -47,16 +47,20 @@ def myexec cmd, opts = {}
     # try to read. Loop every 1 second over and over the same process until 
     # the process finishes or timeout is reached.
     elapsed = 0
-    while wait_thr.status and (elapsed = Time.now - start) < opts[:timeout]
+    while wait_thr.status && (elapsed = Time.now - start) < opts[:timeout]
+
+      # Monitor stdout and stderr for changes
       Kernel.select([stdout,stderr],nil,nil,1)
 
       # Read STDIN in a nonblock way.
       begin
-        stdout_line = stdout.read_nonblock(100) 
-        print stdout_line if opts[:stdout]
-        stdout_all += stdout_line
-        # spin the pinwheel
-        pinwheel.spin_it if opts[:spinner]
+        # Read the full buffer
+        while (stdout_line = stdout.read_nonblock(100))
+          print stdout_line if opts[:stdout]
+          stdout_all += stdout_line
+          # spin the pinwheel
+          pinwheel.spin_it if opts[:spinner]
+        end
       rescue IO::WaitReadable
         # Exception raised when there is nothing to read
       rescue EOFError
@@ -79,6 +83,7 @@ def myexec cmd, opts = {}
       end
 
     end
+
 
     # Log stdout output
     logger.info "\n" + stdout_all if logger and ! stdout_all.empty?

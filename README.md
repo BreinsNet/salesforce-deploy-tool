@@ -1,29 +1,52 @@
-# Salesforce::Deploy::Tool
+# Salesforce Deploy Tool
 
-TODO: Write a gem description
+Salesforce deploy tool is a command line tool that sits on top of ant to facilitate
+salesforce deploys.
+
+## Features
+
+* Easier than using ant
+* Specify environment to deploy using a flag
+* Exclude and include metadata and metadata types
+* Destructive Changes autogeneration
+* GIT integration
+* Production / Test deployment support
+* Fast deploy support
 
 ## Installation
 
-Add this line to your application's Gemfile:
+    $ gem install commander
 
-    gem 'salesforce-deploy-tool'
+## Quick Start
 
-And then execute:
+To generate a configuration file do
 
-    $ bundle
+    $ sf config
 
-Or install it yourself as:
+## Example
 
-    $ gem install salesforce-deploy-tool
+For how to use this tool just run:
 
-## Usage
+    $ sf pull -h
+    $ sf push -h
 
-TODO: Write usage instructions here
+### specific examples
 
-## Contributing
+```
+$ sf pull -d
+$ sf pull -d -s mySandbox
+$ sf push -T
+$ sf push -s prod
+$ sf push -i apexclass
+$ sf push -i apexclass -e TestClass -d -s myOtherSandbox
+$ sf push -a
+```
 
-1. Fork it ( https://github.com/[my-github-username]/salesforce-deploy-tool/fork )
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create a new Pull Request
+## Contrib
+
+Feel free to fork and request a pull, or submit a ticket
+http://github.com/BreinsNet/salesforce-deploy-tool/issues
+
+## License
+
+This project is available under the MIT license. See LICENSE for details.

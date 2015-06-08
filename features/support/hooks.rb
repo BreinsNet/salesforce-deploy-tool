@@ -8,7 +8,7 @@ When /^I watch "(.+)" for changes and copy to "(.+)"$/ do |file,dest|
   fork do
     FileWatcher.new(file).watch do |filename|
       FileUtils.cp file, dest
-      exit
+      exit 0
     end
   end
 end

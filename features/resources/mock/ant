@@ -198,4 +198,7 @@ EOF
 
 esac
 
-sleep 0.4
+# Sleep 2 seconds so that the tests with version files can detect changes on it
+[[ ! -z $SFDT_VERSION_FILE ]] && sleep 1
+
+exit 0

@@ -101,6 +101,7 @@ Feature: Push code to salesforce
     And the output should match /Running Test/
     And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
 
+  @test
   Scenario: Push code to a sandbox with a build number
     Given I set the environment variables to:
       | variable                  | value                   |
@@ -119,7 +120,6 @@ Feature: Push code to salesforce
     ^INFO: Deploying code to testEnv:.*OK$
     """
 
-  @test
   Scenario: Push code to a sandbox with the commit hash stamped into a version file
     Given I set the environment variables to:
       | variable                  | value                   |

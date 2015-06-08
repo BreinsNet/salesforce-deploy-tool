@@ -36,5 +36,5 @@ Before '@push,@pull' do
 end
 
 at_exit do
-  FileUtils.rm 'bin/ant'
+  FileUtils.rm 'bin/ant' if File.exists? 'bin/ant'
 end

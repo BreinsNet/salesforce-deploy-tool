@@ -25,6 +25,7 @@ module SalesforceDeployTool
       @commit_hash_pattern = config[:commit_hash_pattern]
       @username = @sandbox == 'prod' ? @username : @username + '.' + @sandbox 
       @server_url = config[:salesforce_url]
+      @libant = File.expand_path(config[:libant]) if config[:libant]
 
       # Defaults
       @check_only = false
@@ -109,7 +110,9 @@ module SalesforceDeployTool
       env_vars += " SF_USERNAME=" + @username
       env_vars += " SF_PASSWORD=" + @password
       env_vars += " SF_SERVERURL=" + @server_url
-      cmd = " ant retrieveCode"
+      cmd = " ant"
+      cmd += " -lib #{@libant}" if @libant
+      cmd += " retrieveCode"
 
       full_cmd = env_vars + cmd
 
@@ -167,21 +170,23 @@ module SalesforceDeployTool
         exec_options[:failmsg]  =   nil
       end
 
+      ant_cmd = " ant"
+      ant_cmd += " -lib #{@libant}" if @libant
       if @run_all_tests  
-        cmd = " ant deployAndTestCode" 
+        cmd = " deployAndTestCode" 
       else
         if ! @run_tests.empty?
-          cmd = " ant deployAndRunSpecifiedTests"
+          cmd = " deployAndRunSpecifiedTests"
         else
-          cmd = " ant deployCode"
+          cmd = " deployCode"
         end
       end
 
       if @check_only
-        cmd = " ant checkOnlyCode"
+        cmd = " checkOnlyCode"
       end
-        
-      full_cmd = env_vars + cmd
+       
+      full_cmd = env_vars + ant_cmd + cmd
 
       # Delete files to be ignored:
       @deploy_ignore_files.each do |file|

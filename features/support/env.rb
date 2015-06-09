@@ -36,8 +36,15 @@ Before '@push,@pull,@config' do
   name = File.join 'tmp', 'aruba', ENV['SFDT_GIT_DIR']
   Git.clone(uri, name)
 
+  # Simulate a different ant library
+  FileUtils.mkdir File.join 'tmp','aruba','lib'
+  FileUtils.touch File.join 'tmp','aruba','lib','ant34.jar'
 end
 
 at_exit do
   FileUtils.rm 'bin/ant' if File.exists? 'bin/ant'
+end
+
+After do |s| 
+  Cucumber.wants_to_quit = true if s.failed?
 end

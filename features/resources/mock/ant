@@ -1,6 +1,17 @@
 #!/bin/bash
 
-COMMAND=$1
+if [[ $1 == '-lib' ]] ;then 
+  COMMAND=$3
+  ANTLIB=$2
+else
+  COMMAND=$1
+  ANTLIB=$2
+fi
+
+if [[ ! -z $ANTLIB ]] && [[ ! -f $ANTLIB ]]; then
+  echo "ERROR: ANT lib path not found"
+  exit 1
+fi
 
 if [[ -z $SF_SRC_DIR ]]; then
   echo "ERROR: SF_SRC_DIR Not defined"
@@ -75,7 +86,7 @@ case $COMMAND in
   # Add two more classes and two more pages so to simulate
   # Destructive changes
   cd $SF_SRC_DIR
-  git reset --hard
+  git reset --hard > /dev/null 2>&1
   old_dir=`pwd`
   cd $SF_SRC_DIR/classes
   ls|tail -2|while read class;do cp $class New$class;done

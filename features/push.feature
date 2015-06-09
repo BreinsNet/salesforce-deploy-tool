@@ -280,7 +280,6 @@ Feature: Push code to salesforce
     And the output should match /INFO: Deploying code to testEnv/
     And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
 
-  @new
   Scenario: Push code to a sandbox in debug mode and specifieng specific metadata exclude from destructive change
     When I run `sf push -e NewVersionTest -d`
     Then the exit status should be 0
@@ -292,3 +291,47 @@ Feature: Push code to salesforce
     And the output should match /excluded: NewVersionTest/
     And the output should match /INFO: Deploying code to testEnv/
     And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
+
+  @ant
+  Scenario: Push code to a sandbox using a different ant library path in debug mode should show the library path in the output
+    Given I set the environment variables to:
+      | variable                  | value                   |
+      | SFDT_ANT_LIB              | lib/ant34.jar           |
+    When I run `sf push -d`
+    Then the exit status should be 0
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
+    And the output should match:
+    """
+    ^INFO: Deploying code to .*$
+    ^$
+    ^AntLibraryFile: .*lib/ant34.jar$
+    ^Buildfile: .*$
+    ^$
+    ^deployCode:$
+    """
+
+  @ant
+  Scenario: Push code to a sandbox using a different ant library path in debug mode should show the library path in the output
+    When I run `sf push -l lib/ant34.jar -d`
+    Then the exit status should be 0
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
+    And the output should match:
+    """
+    ^INFO: Deploying code to .*$
+    ^$
+    ^AntLibraryFile: .*lib/ant34.jar$
+    ^Buildfile: .*$
+    ^$
+    ^deployCode:$
+    """
+
+  @ant
+  Scenario: Push code to a sandbox using a invalid ant library path should fail
+    When I run `sf push -l lib/invalid_ant34.jar`
+    Then the exit status should be 1
+    And the output should match:
+    """
+    ^error: ant library file .* not found$
+    """

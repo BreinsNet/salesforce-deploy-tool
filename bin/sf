@@ -50,6 +50,9 @@ config[:build_number_pattern]  =  ENV["SFDT_BUILD_NUMBER_PATTERN"]  ||  config[:
 config[:commit_hash_pattern]   =  ENV["SFDT_COMMIT_HASH_PATTERN"]   ||  config[:commit_hash_pattern]
 config[:deploy_ignore_files]   =  ENV["SFDT_DEPLOY_IGNORE_FILES"].nil? ? config[:deploy_ignore_files] : ENV["SFDT_DEPLOY_IGNORE_FILES"].split(',')
 
+# Ant options
+config[:libant]                =  ENV["SFDT_ANT_LIB"]               ||  config[:libant]
+
 # Minimal config validation
 abort "Config error: src_dir not found in #{GLOBAL_CONFIG_FILE} or through SFDT_SRC_DIR" \
   if config[:src_dir].nil? && !['-v'].include?(ARGV.first)

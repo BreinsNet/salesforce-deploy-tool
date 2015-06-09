@@ -16,9 +16,6 @@ module SalesforceDeployTool
         abort "ERROR: The source directory #{full_src_dir} is not a valid salesforce source directory"
       end
 
-      # Chdir to working directory
-      Dir.chdir config[:tmp_dir]
-
       # saleforce-deploy-tool version and description
       program :version, SalesforceDeployTool::VERSION
       program :description, 'A cli tool to help manage and deploy salesforce sandboxes with git'
@@ -32,24 +29,36 @@ module SalesforceDeployTool
         c.option "--append", "Pull code appending it to the local repository"
         c.option "--debug", "Verbose output"
         c.option "--sandbox NAME", "-s NAME", "use 'prod' to deploy production or sandbox name"
+        c.option "--lib-ant PATH", "-l PATH", "Path to the ant-library to use"
         c.action do |args, options|
 
           # short flag mapping
           options.sandbox = options.s if options.s
+          options.libant = options.l if options.l
 
           # Parameter validation:
           if options.sandbox.nil? and config[:sandbox].nil?
             puts "error: please specify sandbox using --sandbox or sf sandbox"
             exit 1
           end
+
+          if options.libant && !File.exists?(File.expand_path options.libant)
+            puts "error: ant library file #{options.libant} not found"
+            exit 1
+          end
+
+          # Config array
+          config[:libant] =  config[:libant] || options.libant
+          config[:libant] =  File.expand_path(config[:libant]) if config[:libant]
           config[:sandbox] = options.sandbox if options.sandbox
           config[:debug] = options.debug.nil? ? false : true
-
-          # The salesforce URL
           config[:salesforce_url] = 
             ENV["SFDT_SALESFORCE_URL"] ||                                                                   # First from environment variables
             config[:salesforce_url]    ||                                                                   # Second from the configuration files
             ( config[:sandbox] == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com' ) # If not defined anywhere, use defaults
+
+          # Chdir to working directory
+          Dir.chdir config[:tmp_dir]
 
           # Initialize
           sfdt = SalesforceDeployTool::App.new config
@@ -57,9 +66,12 @@ module SalesforceDeployTool
           # Clean all files from repo
           sfdt.clean_git_dir unless options.append
 
-          # Pull the changes
+          # output message
           print "INFO: Pulling changes from #{config[:sandbox]} using url #{config[:salesforce_url]}  "
           print "\n\n" if options.debug
+          print "AntLibraryFile: #{config[:libant]}\n" if config[:libant] && options.debug
+
+          # Pull
           sfdt.pull
           sfdt.clean_version
 
@@ -81,6 +93,7 @@ module SalesforceDeployTool
         c.option "--run-tests CSV_LIST", "-r CSV_LIST", "a CSV list of individual classes to run tests"
         c.option "--check-only", "-c", "Check only, don't deploy"
         c.option "--include CSV_LIST", "-i CSV_LIST", "A CSV list of metadata type to include when creating destructiveChange.xml"
+        c.option "--lib-ant PATH", "-l PATH", "Path to the ant-library to use"
         c.action do |args, options|
 
           # short flag mapping
@@ -90,6 +103,7 @@ module SalesforceDeployTool
           options.exclude = options.x if options.x
           options.sandbox = options.s if options.s
           options.include = options.i if options.i
+          options.libant = options.l if options.l
 
           # Parameter validation:
           if options.run_all_tests and options.run_tests
@@ -100,14 +114,24 @@ module SalesforceDeployTool
             puts "error: please specify the sandbox to pull from using --sandbox"
             exit 1
           end
+
+          if options.libant && !File.exists?(File.expand_path options.libant)
+            puts "error: ant library file #{options.libant} not found"
+            exit 1
+          end
+
+          # Config array
+          config[:libant] =  config[:libant] || options.libant
+          config[:libant] =  File.expand_path(config[:libant]) if config[:libant]
           config[:sandbox] = options.sandbox if options.sandbox
           config[:debug] = options.debug.nil? ? false : true
-
-          # The salesforce URL
           config[:salesforce_url] = 
             ENV["SFDT_SALESFORCE_URL"] ||                                                                   # First from environment variables
             config[:salesforce_url]    ||                                                                   # Second from the configuration files
             ( config[:sandbox] == 'prod' ? 'https://login.salesforce.com' : 'https://test.salesforce.com' ) # If not defined anywhere, use defaults
+
+          # Chdir to working directory
+          Dir.chdir config[:tmp_dir]
 
           # Initialize
           sfdt = SalesforceDeployTool::App.new config
@@ -123,8 +147,11 @@ module SalesforceDeployTool
             FileUtils.cp_r config[:git_dir],config_tmp[:git_dir]
             sfdt_tmp = SalesforceDeployTool::App.new config_tmp
             sfdt_tmp.clean_git_dir
+            
             print "INFO: Pulling changes from #{config[:sandbox]} using url #{config[:salesforce_url]} to temporary directory to generate destructiveChanges.xml  "
             print( options.debug.nil? ? "" : "\n\n" )
+            print "AntLibraryFile: #{config[:libant]}\n" if config[:libant] && options.debug
+
             sfdt_tmp.pull
 
             # Create destructiveChanges.xml
@@ -153,9 +180,12 @@ module SalesforceDeployTool
             # Check only option:
             sfdt.check_only = options.check_only
 
-            # Push
+            # Output message:
             print( options.run_all_tests.nil? && options.run_tests.nil? ? "INFO: Deploying code to #{config[:sandbox]}:   ": "INFO: Deploying and Testing code to #{config[:sandbox]}:  " )
             print( options.debug.nil? ? "" : "\n\n" )
+            print "AntLibraryFile: #{config[:libant]}\n" if config[:libant] && options.debug
+
+            # Push
             sfdt.push
           ensure
             sfdt.clean_version

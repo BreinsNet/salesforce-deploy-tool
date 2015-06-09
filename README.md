@@ -5,6 +5,7 @@ salesforce deploys.
 
 ## Features
 
+* push code / pull code / validate / destructive push support
 * Easier than using ant
 * Specify environment to deploy using a flag
 * Exclude and include metadata and metadata types
@@ -12,10 +13,11 @@ salesforce deploys.
 * GIT integration
 * Production / Test deployment support
 * Fast deploy support
+* Specify different ant libraries so to use different APIs
 
 ## Installation
 
-    $ gem install commander
+    $ gem install salesforce-deploy-tool
 
 ## Quick Start
 
@@ -36,6 +38,7 @@ For how to use this tool just run:
 $ sf pull -d
 $ sf pull -d -s mySandbox
 $ sf push -T
+$ sf push -l /path/to/ant-salesforce.jar
 $ sf push -s prod
 $ sf push -i apexclass
 $ sf push -i apexclass -e TestClass -d -s myOtherSandbox

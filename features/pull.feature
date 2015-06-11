@@ -8,6 +8,8 @@ Feature: Pull code from salesforce
     When I run `sf pull`
     Then the exit status should be 0
     And the file "/tmp/sfdt-test/build.xml" should match /sf:retrieve/
+    And the file "/tmp/sfdt-test/build.xml" should match /retrieveTarget/
+    And the file "/tmp/sfdt-test/build.xml" should match /unpackaged/
     And the output should match:
     """
     ^INFO: Pulling changes from testEnv using url https://test.salesforce.com.*OK

@@ -4,11 +4,18 @@
 
     <target name="<%= target.gsub(' ','') %>">
       <sf:<%= target.match(/deploy|check/) ? 'deploy' : 'retrieve'%>
+        maxPoll="200" 
         username="${env.SF_USERNAME}" 
         password="${env.SF_PASSWORD}" 
         serverurl="${env.SF_SERVERURL}" 
+<% if target.match(/retrieve/) -%>
+        retrieveTarget="${env.SF_SRC_DIR}"
+        unpackaged="${env.SF_SRC_DIR}/package.xml"
+<% end -%>
+<% if target.match(/deploy|check/) -%>
         deployRoot="${env.SF_SRC_DIR}" 
-        maxPoll="200" 
+        rollbackOnError="true" 
+<% end -%>
 <% if @check_only -%>
         checkOnly="true"
 <% end -%>
@@ -16,16 +23,15 @@
         runAllTests="true" 
 <% end -%>
 <% if !@run_tests.empty? -%>
-        testLevel="RunSpecifiedTests">
+        testLevel="RunSpecifiedTests"
 <% end -%>
 <% if !@check_only -%>
-        rollbackOnError="true" 
 <% end -%>
         >
 <% @run_tests.each do |test| -%>
       <runTest><%= test %></runTest>
 <% end -%>
-      </sf:deploy>
+      </sf:<%= target.match(/deploy|check/) ? 'deploy' : 'retrieve'%>>
     </target>
 
 </project>

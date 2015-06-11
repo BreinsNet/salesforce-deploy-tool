@@ -157,7 +157,7 @@ BUILD SUCCESSFUL
 EOF
 fi
 ;;
-"deployAndTestCode")
+"deployAndTestCode"|"checkAndTestCode")
   cat << EOF
 Buildfile: ${PWD}/build.xml
 
@@ -213,11 +213,11 @@ ${COMMAND}:
 BUILD SUCCESSFUL
 EOF
 ;;
-"checkOnlyCode")
+"checkCode")
   cat << EOF
 Buildfile: /home/vagrant/salesforce/build.xml
 
-checkOnlyCode:
+checkCode:
 [sf:deploy] Request for a deploy submitted successfully.
 [sf:deploy] Request ID for the current deploy task: 0Afg000000Dwn66CAB
 [sf:deploy] Waiting for server to finish processing the request...

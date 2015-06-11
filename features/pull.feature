@@ -7,6 +7,7 @@ Feature: Pull code from salesforce
   Scenario: Retrieve code from the default sandbox
     When I run `sf pull`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:retrieve/
     And the output should match:
     """
     ^INFO: Pulling changes from testEnv using url https://test.salesforce.com.*OK
@@ -15,6 +16,7 @@ Feature: Pull code from salesforce
   Scenario: Retrieve code from a specific sandbox
     When I run `sf pull -s testEnvAlt`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:retrieve/
     And the output should match:
     """
     ^INFO: Pulling changes from testEnvAlt using url https://test.salesforce.com.*OK
@@ -26,6 +28,7 @@ Feature: Pull code from salesforce
       | SFDT_SALESFORCE_URL  | https://invalid_url.salesforce.com |
     When I run `sf pull`
     Then the exit status should be 1
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:retrieve/
     And the output should match:
     """
     ^INFO: Pulling changes from testEnv using url https://invalid_url.*
@@ -34,6 +37,7 @@ Feature: Pull code from salesforce
   Scenario: Retrieve code from a production
     When I run `sf pull -s prod`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:retrieve/
     And the output should match:
     """
     ^INFO: Pulling changes from prod using url https://login.salesforce.com.*OK$
@@ -42,6 +46,7 @@ Feature: Pull code from salesforce
   Scenario: Retrieve code from the default sandbox with debug output
     When I run `sf pull -d`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:retrieve/
     And the output should contain "BUILD SUCCESSFUL"
     And the output should match:
     """
@@ -51,6 +56,7 @@ Feature: Pull code from salesforce
   Scenario: Retrieve code from a specific sandbox with debug output
     When I run `sf pull -s testEnv -d`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:retrieve/
     And the output should contain "BUILD SUCCESSFUL"
     And the output should match:
     """
@@ -61,6 +67,7 @@ Feature: Pull code from salesforce
   Scenario: Retrieve code from the default sandbox with debug output and specifying ant library path
     When I run `sf pull -d -l lib/ant34.jar`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:retrieve/
     And the output should match:
     """
     ^INFO: Pulling changes from testEnv using url https://test.salesforce.com  $
@@ -78,6 +85,7 @@ Feature: Pull code from salesforce
       | SFDT_ANT_LIB              | lib/ant34.jar           |
     When I run `sf pull -d`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:retrieve/
     And the output should match:
     """
     ^INFO: Pulling changes from testEnv using url https://test.salesforce.com  $

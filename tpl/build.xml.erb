@@ -2,65 +2,30 @@
 
     <property environment="env"/>
 
-    <target name="deployCode">
-      <sf:deploy 
+    <target name="<%= target.gsub(' ','') %>">
+      <sf:<%= target.match(/deploy|check/) ? 'deploy' : 'retrieve'%>
         username="${env.SF_USERNAME}" 
         password="${env.SF_PASSWORD}" 
         serverurl="${env.SF_SERVERURL}" 
         deployRoot="${env.SF_SRC_DIR}" 
         maxPoll="200" 
-        rollbackOnError="true" >
-      </sf:deploy>
-    </target>
-
-    <target name="checkOnlyCode">
-      <sf:deploy 
-        username="${env.SF_USERNAME}" 
-        password="${env.SF_PASSWORD}" 
-        serverurl="${env.SF_SERVERURL}" 
-        deployRoot="${env.SF_SRC_DIR}" 
-        maxPoll="200" 
+<% if @check_only -%>
         checkOnly="true"
-        rollbackOnError="true" >
-      </sf:deploy>
-    </target>
-
-    <target name="deployAndRunSpecifiedTests">
-      <sf:deploy 
-        username="${env.SF_USERNAME}" 
-        password="${env.SF_PASSWORD}" 
-        serverurl="${env.SF_SERVERURL}" 
-        deployRoot="${env.SF_SRC_DIR}" 
-        maxPoll="200" 
-        rollbackOnError="true"
+<% end -%>
+<% if @run_all_tests -%>
+        runAllTests="true" 
+<% end -%>
+<% if !@run_tests.empty? -%>
         testLevel="RunSpecifiedTests">
+<% end -%>
+<% if !@check_only -%>
+        rollbackOnError="true" 
+<% end -%>
+        >
 <% @run_tests.each do |test| -%>
       <runTest><%= test %></runTest>
 <% end -%>
       </sf:deploy>
-    </target>
-
-    <target name="deployAndTestCode">
-      <sf:deploy 
-        username="${env.SF_USERNAME}" 
-        password="${env.SF_PASSWORD}" 
-        serverurl="${env.SF_SERVERURL}" 
-        deployRoot="${env.SF_SRC_DIR}" 
-        maxPoll="200" 
-        runAllTests="true" 
-        rollbackOnError="true" >
-      </sf:deploy>
-    </target>
-
-    <target name="retrieveCode">
-      <sf:retrieve 
-        username="${env.SF_USERNAME}" 
-        password="${env.SF_PASSWORD}" 
-        serverurl="${env.SF_SERVERURL}" 
-        retrieveTarget="${env.SF_SRC_DIR}" 
-        maxPoll="200" 
-        unpackaged="${env.SF_SRC_DIR}/package.xml"
-      />
     </target>
 
 </project>

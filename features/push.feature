@@ -8,6 +8,7 @@ Feature: Push code to salesforce
     When I run `sf push`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
@@ -20,6 +21,7 @@ Feature: Push code to salesforce
     When I run `sf push -s testEnvAlt`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
@@ -31,6 +33,7 @@ Feature: Push code to salesforce
   Scenario: Push code to production should use the url login.salesorce.com
     When I run `sf push -s prod`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
@@ -53,6 +56,8 @@ Feature: Push code to salesforce
   Scenario: Push code to a sandbox and trigger all the tests
     When I run `sf push -T`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
+    And the file "/tmp/sfdt-test/build.xml" should match /runAllTests.*true/
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
     And the output should match:
@@ -64,6 +69,8 @@ Feature: Push code to salesforce
   Scenario: Push code to a sandbox and trigger all the tests in debug mode
     When I run `sf push -T -d`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
+    And the file "/tmp/sfdt-test/build.xml" should match /runAllTests.*true/
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
     And the output should match /^.* testEnv .*BUILD SUCCESSFUL.*Diff between.*Changes detected.*File generated.*Running Test:.*DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL.*$/
@@ -71,6 +78,7 @@ Feature: Push code to salesforce
   Scenario: Push code to a sandbox in append mode
     When I run `sf push -a`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
     And a file named "repo/salesforce/src/destructiveChanges.xml" should not exist
     And the output should match:
     """
@@ -80,6 +88,8 @@ Feature: Push code to salesforce
   Scenario: Push code to a sandbox in append mode and run all tests
     When I run `sf push -a -T`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
+    And the file "/tmp/sfdt-test/build.xml" should match /runAllTests.*true/
     And a file named "repo/salesforce/src/destructiveChanges.xml" should not exist
     And the output should match:
     """
@@ -89,6 +99,8 @@ Feature: Push code to salesforce
   Scenario: Push code to a sandbox in append mode and run all tests and output debug information
     When I run `sf push -a -T -d`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
+    And the file "/tmp/sfdt-test/build.xml" should match /runAllTests.*true/
     And a file named "repo/salesforce/src/destructiveChanges.xml" should not exist
     And the output should match:
     """
@@ -110,6 +122,7 @@ Feature: Push code to salesforce
     When I watch "repo/salesforce/src/classes/VersionTest.cls" for changes and copy to "test_file"
     And I run `sf push --build_number 123456789`
     Then the exit status should be 0
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
     And the file "test_file" should contain "123456789"
     And the file "repo/salesforce/src/classes/VersionTest.cls" should contain "%%BUILD_NUMBER%%"
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
@@ -131,6 +144,7 @@ Feature: Push code to salesforce
     And the file "test_file" should contain "aac66ee0d404c124fbcafd32a054664de4fdd3da"
     And the file "repo/salesforce/src/classes/VersionTest.cls" should contain "%%COMMIT_HASH%%"
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
     And the output should match:
     """
     ^INFO: Pulling changes from testEnv using url https://test.salesforce.com to temporary directory to generate destructiveChanges.xml.*OK$
@@ -162,6 +176,9 @@ Feature: Push code to salesforce
     When I run `sf push -r individual_test -d`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
+    And the file "/tmp/sfdt-test/build.xml" should match /testLevel.*RunSpecifiedTests/
+    And the file "/tmp/sfdt-test/build.xml" should match /runTest/
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
@@ -183,6 +200,7 @@ Feature: Push code to salesforce
     And I run `sf push --build_number 123456789`
     Then the exit status should be 0
     And the file "test_file" should contain "123456789"
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
     And the file "repo/salesforce/src/classes/VersionTest.cls" should contain "%%BUILD_NUMBER%%"
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
@@ -201,6 +219,7 @@ Feature: Push code to salesforce
     And I run `sf push`
     Then the exit status should be 0
     And the file "test_file" should contain "aac66ee0d404c124fbcafd32a054664de4fdd3da"
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
     And the file "repo/salesforce/src/classes/VersionTest.cls" should contain "%%COMMIT_HASH%%"
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
@@ -233,6 +252,9 @@ Feature: Push code to salesforce
     When I run `sf push -r individual_test -d`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
+    And the file "/tmp/sfdt-test/build.xml" should match /testLevel.*RunSpecifiedTests/
+    And the file "/tmp/sfdt-test/build.xml" should match /runTest/
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
@@ -245,10 +267,31 @@ Feature: Push code to salesforce
     And the output should match /Running Test: .*/
     And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
 
+  Scenario: Push code to a sandbox in check only mode using debug and Test
+    When I run `sf push -c -d -T`
+    Then the exit status should be 0
+    And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
+    And the file "/tmp/sfdt-test/build.xml" should match /checkOnly.*true/
+    And the file "/tmp/sfdt-test/build.xml" should match /runAllTests.*true/
+    And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
+    And the output should match:
+    """
+    ^INFO: Deploying and Testing code to testEnv:.*$
+    ^$
+    ^Buildfile: .*$
+    ^$
+    ^checkAndTestCode:$
+    """
+    And the output should match /Running Test/
+    And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
+
   Scenario: Push code to a sandbox in check only mode using debug
     When I run `sf push -c -d`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
+    And the file "/tmp/sfdt-test/build.xml" should match /checkOnly.*true/
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
@@ -256,7 +299,7 @@ Feature: Push code to salesforce
     ^$
     ^Buildfile: .*$
     ^$
-    ^checkOnlyCode:$
+    ^checkCode:$
     """
     And the output should match /DEPLOYMENT SUCCEEDED.*BUILD SUCCESSFUL/
 
@@ -264,6 +307,7 @@ Feature: Push code to salesforce
     When I run `sf push -e Account.Sort__c -d`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
     And the output should match /Pulling.*testEnv.*https:..test.salesforce.com.*destructiveChanges.xml/
     And the output should match /excluded: Account.Sort__c/
     And the output should match /INFO: Deploying code to testEnv/
@@ -273,6 +317,7 @@ Feature: Push code to salesforce
     When I run `sf push -i apexclass -d`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
     And the file "repo/salesforce/src/destructiveChanges.xml" should contain "ApexClass"
     And the file "repo/salesforce/src/destructiveChanges.xml" should not contain "ApexPage"
     And the output should match /Pulling.*testEnv.*https:..test.salesforce.com.*destructiveChanges.xml/
@@ -284,6 +329,7 @@ Feature: Push code to salesforce
     When I run `sf push -e NewVersionTest -d`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
     And the file "repo/salesforce/src/destructiveChanges.xml" should not contain "ApexClass"
     And the file "repo/salesforce/src/destructiveChanges.xml" should not contain "NewVersionTest"
     And the file "repo/salesforce/src/destructiveChanges.xml" should contain "ApexPage"
@@ -300,6 +346,7 @@ Feature: Push code to salesforce
     When I run `sf push -d`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """
@@ -316,6 +363,7 @@ Feature: Push code to salesforce
     When I run `sf push -l lib/ant34.jar -d`
     Then the exit status should be 0
     And a file named "repo/salesforce/src/destructiveChanges.xml" should exist
+    And the file "/tmp/sfdt-test/build.xml" should match /sf:deploy/
     And the file "repo/salesforce/src/destructiveChanges.xml" should match /ApexClass|ApexPage/
     And the output should match:
     """

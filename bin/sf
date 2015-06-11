@@ -65,14 +65,19 @@ abort "Config error: username not found in #{GLOBAL_CONFIG_FILE} or through SFDT
 abort "Config error: password not found in #{GLOBAL_CONFIG_FILE} or through SFDT_PASSWORD" \
   if config[:password].nil? && !['config','-v'].include?(ARGV.first)
 
-# Create a temporary directory
-config[:tmp_dir] = Dir.mktmpdir 'sfdt-'
+# Create a temporary directory if SFDT_TMP_DIR is set, use that and don't delete it
+# This is to facilitate testinig and inspecting build.xml file
+if !ENV['SFDT_TMP_DIR'].nil?
+  FileUtils.rm_rf ENV['SFDT_TMP_DIR']
+  FileUtils.mkdir ENV['SFDT_TMP_DIR']
+end
+config[:tmp_dir] = ENV['SFDT_TMP_DIR'] || Dir.mktmpdir('sfdt-')
 
-  SalesforceDeployTool::CLI.new.run config 
 begin
+  SalesforceDeployTool::CLI.new.run config 
 rescue => e
   puts "ERROR: #{e}"
   exit 1
 ensure
-  FileUtils.rm_rf config[:tmp_dir] if Dir.exists? config[:tmp_dir]
+  FileUtils.rm_rf config[:tmp_dir] if Dir.exists? config[:tmp_dir] unless ENV['SFDT_TMP_DIR']
 end

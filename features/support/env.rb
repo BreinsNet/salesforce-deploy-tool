@@ -9,6 +9,9 @@ ENV["HOME"] = new_home
 FileUtils.rm_rf new_home if Dir.exists? new_home
 FileUtils.mkdir new_home
 
+# Set a temporary dir to inspect build.xml
+ENV["SFDT_TMP_DIR"] = '/tmp/sfdt-test'
+
 # Cucumber / aruba configuration parameters
 Before do
   @aruba_timeout_seconds = 300

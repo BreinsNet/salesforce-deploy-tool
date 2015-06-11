@@ -102,19 +102,16 @@ module SalesforceDeployTool
       # Parameter validation
       raise "package.xml not found under #{@full_src_dir}" if !File.exists? File.join(@full_src_dir,'package.xml')
 
-      renderer = ERB.new(@buildxml_erb, nil,'%<>-')
-      File.open('build.xml','w') {|f| f.write renderer.result(binding) }
-
       env_vars = ""
       env_vars += " SF_SRC_DIR=" + @full_src_dir
       env_vars += " SF_USERNAME=" + @username
       env_vars += " SF_PASSWORD=" + @password
       env_vars += " SF_SERVERURL=" + @server_url
-      cmd = " ant"
-      cmd += " -lib #{@libant}" if @libant
-      cmd += " retrieveCode"
+      ant_cmd = " ant"
+      ant_cmd += " -lib #{@libant}" if @libant
+      target = " retrieveCode"
 
-      full_cmd = env_vars + cmd
+      full_cmd = env_vars + ant_cmd + target
 
       exec_options = {
         :stderr => @debug,
@@ -129,7 +126,9 @@ module SalesforceDeployTool
         exec_options[:failmsg] = nil
       end
 
-      # Pull the code
+      # Generate build.xml and run command
+      renderer = ERB.new(@buildxml_erb, nil,'%<>-')
+      File.open('build.xml','w') {|f| f.write renderer.result(binding) }
       exit_code = myexec full_cmd, exec_options
 
       # Delete files to be ignored:
@@ -146,16 +145,6 @@ module SalesforceDeployTool
       # Parameter validation
       raise "package.xml not found under #{@full_src_dir}" if !File.exists? File.join(@full_src_dir,'package.xml')
 
-      renderer = ERB.new(@buildxml_erb, nil,'%<>-')
-      File.open('build.xml','w') {|f| f.write renderer.result(binding) }
-
-      # Set env variables to run ant
-      env_vars = ""
-      env_vars += " SF_SRC_DIR=" + @full_src_dir
-      env_vars += " SF_USERNAME=" + @username
-      env_vars += " SF_PASSWORD=" + @password
-      env_vars += " SF_SERVERURL=" + @server_url
-
       # myexec options
       exec_options = {
         :stderr   =>  @debug,
@@ -170,30 +159,42 @@ module SalesforceDeployTool
         exec_options[:failmsg]  =   nil
       end
 
+      # Set env variables to run ant
+      env_vars = ""
+      env_vars += " SF_SRC_DIR=" + @full_src_dir
+      env_vars += " SF_USERNAME=" + @username
+      env_vars += " SF_PASSWORD=" + @password
+      env_vars += " SF_SERVERURL=" + @server_url
+
+      # Command
       ant_cmd = " ant"
       ant_cmd += " -lib #{@libant}" if @libant
+
+      # Target
       if @run_all_tests  
-        cmd = " deployAndTestCode" 
+        target = " deployAndTestCode" 
       else
         if ! @run_tests.empty?
-          cmd = " deployAndRunSpecifiedTests"
+          target = " deployAndRunSpecifiedTests"
         else
-          cmd = " deployCode"
+          target = " deployCode"
         end
       end
 
       if @check_only
-        cmd = " checkOnlyCode"
+        target = target.gsub('deploy','check')
       end
        
-      full_cmd = env_vars + ant_cmd + cmd
+      full_cmd = env_vars + ant_cmd + target
 
       # Delete files to be ignored:
       @deploy_ignore_files.each do |file|
         FileUtils.rm file if File.exists? file
       end
 
-      # Push the code
+      # Generate build.xml and run command
+      renderer = ERB.new(@buildxml_erb, nil,'%<>-')
+      File.open('build.xml','w') {|f| f.write renderer.result(binding) }
       exit_code = myexec full_cmd, exec_options
 
       # exit with exit_code

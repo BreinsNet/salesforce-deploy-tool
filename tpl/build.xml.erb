@@ -4,7 +4,7 @@
 
     <target name="<%= target.gsub(' ','') %>">
       <sf:<%= target.match(/deploy|check/) ? 'deploy' : 'retrieve'%>
-        maxPoll="200" 
+        maxPoll="20000" 
         username="${env.SF_USERNAME}" 
         password="${env.SF_PASSWORD}" 
         serverurl="${env.SF_SERVERURL}" 

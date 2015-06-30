@@ -65,7 +65,6 @@ Feature: Pull code from salesforce
     ^INFO: Pulling changes from testEnv using url https://test.salesforce.com.*$
     """
 
-  @ant
   Scenario: Retrieve code from the default sandbox with debug output and specifying ant library path
     When I run `sf pull -d -l lib/ant34.jar`
     Then the exit status should be 0
@@ -80,7 +79,6 @@ Feature: Pull code from salesforce
     ^retrieveCode:$
     """
 
-  @ant
   Scenario: Retrieve code from the default sandbox with debug output and specifying ant library path
     Given I set the environment variables to:
       | variable                  | value                   |
@@ -98,11 +96,18 @@ Feature: Pull code from salesforce
     ^retrieveCode:$
     """
 
-  @ant
   Scenario: Retrieve code from the default sandbox with debug output and specifying a wrong ant library path
     When I run `sf pull -d -l lib/invalid_ant34.jar`
     Then the exit status should be 1
     And the output should match:
     """
     ^error: ant library file .* not found$
+    """
+
+  Scenario: Pull code from a sandbox using a invalid parameter sequence should fail
+    When I run `sf pull -s -d prod`
+    Then the exit status should be 1
+    And the output should match:
+    """
+    ^invalid sandbox name .*. Please use a valid sandbox name$
     """

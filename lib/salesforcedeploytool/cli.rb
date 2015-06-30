@@ -47,6 +47,11 @@ module SalesforceDeployTool
             exit 1
           end
 
+          if !options.sandbox.nil? and options.sandbox.match(/\-.*/)
+            puts "invalid sandbox name \"#{options.sandbox}\". Please use a valid sandbox name"
+            exit 1
+          end
+
           # Config array
           config[:libant] =  config[:libant] || options.libant
           config[:libant] =  File.expand_path(config[:libant]) if config[:libant]
@@ -112,6 +117,11 @@ module SalesforceDeployTool
 
           if options.sandbox.nil? and config[:sandbox].nil?
             puts "error: please specify the sandbox to pull from using --sandbox"
+            exit 1
+          end
+
+          if !options.sandbox.nil? and options.sandbox.match(/\-.*/)
+            puts "invalid sandbox name \"#{options.sandbox}\". Please use a valid sandbox name"
             exit 1
           end
 

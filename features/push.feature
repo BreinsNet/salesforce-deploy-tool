@@ -375,11 +375,19 @@ Feature: Push code to salesforce
     ^deployCode:$
     """
 
-  @ant
   Scenario: Push code to a sandbox using a invalid ant library path should fail
     When I run `sf push -l lib/invalid_ant34.jar`
     Then the exit status should be 1
     And the output should match:
     """
     ^error: ant library file .* not found$
+    """
+
+  @new
+  Scenario: Push code to a sandbox using a invalid parameter sequence should fail
+    When I run `sf push -s -d prod`
+    Then the exit status should be 1
+    And the output should match:
+    """
+    ^invalid sandbox name .*. Please use a valid sandbox name$
     """
